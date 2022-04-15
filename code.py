@@ -17,15 +17,13 @@ class Window(QMainWindow, Ui_MainWindow):
     def connectElements(self):
         self.statusbar.showMessage("Ready")
         self.cipherButton.clicked.connect(self.cipherClicked)
+        self.decipherButton.clicked.connect(self.decipherClicked)
 
     def cipherClicked(self):
         if self.cipherText.toPlainText() != "":
             self.statusbar.showMessage("Ciphering...")
-            # self.cipher.set_key("1234567890123456")
             c = self.cipher.encrypt_text(self.cipherText.toPlainText())
             self.cipherResults.setPlainText(c)
-            c = self.cipher.decrypt_text(c)
-            self.cipherResults.appendPlainText(c)
             self.statusbar.showMessage("Ciphering done")
         else:
             chosen_file = self.selectFile()
@@ -33,13 +31,34 @@ class Window(QMainWindow, Ui_MainWindow):
             if chosen_file != "":
                 self.statusbar.showMessage("Ciphering...")
                 try:
-                    c = self.cipher.encrypt_file(chosen_file, chosen_file + ".cipher", self)
-                    self.cipherResults.setPlainText(c)
-                    c = self.cipher.decrypt_file(chosen_file + ".cipher", chosen_file + ".decipher", self)
-                    self.cipherResults.appendPlainText(c)
+                    self.cipher.encrypt_file(chosen_file, chosen_file + ".cipher", self)
                     self.statusbar.showMessage("Ciphering done")
                 except:
                     self.statusbar.showMessage("Ciphering failed")
+            else:
+                self.statusbar.showMessage("No file selected")
+
+    def decipherClicked(self):
+        if self.cipherText.toPlainText() != "":
+            self.statusbar.showMessage("Deciphering...")
+            c = self.cipher.decrypt_text(self.cipherText.toPlainText())
+            self.cipherResults.appendPlainText(c)
+            self.statusbar.showMessage("Deciphering done")
+        else:
+            chosen_file = self.selectFile()
+            print(chosen_file)
+            if chosen_file != "":
+                self.statusbar.showMessage("Deciphering...")
+                try:
+                    if chosen_file.endswith(".cipher"):
+                        result_file_name = chosen_file.replace(".cipher", ".decipher")
+                    else:
+                        result_file_name = chosen_file + ".decipher"
+
+                    self.cipher.decrypt_file(chosen_file, result_file_name, self)
+                    self.statusbar.showMessage("Deciphering done")
+                except:
+                    self.statusbar.showMessage("Deciphering failed")
             else:
                 self.statusbar.showMessage("No file selected")
 
