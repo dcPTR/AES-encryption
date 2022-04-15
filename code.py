@@ -33,9 +33,9 @@ class Window(QMainWindow, Ui_MainWindow):
             if chosen_file != "":
                 self.statusbar.showMessage("Ciphering...")
                 try:
-                    c = self.cipher.encrypt_file(chosen_file, chosen_file + ".cipher")
+                    c = self.cipher.encrypt_file(chosen_file, chosen_file + ".cipher", self)
                     self.cipherResults.setPlainText(c)
-                    c = self.cipher.decrypt_file(chosen_file + ".cipher", chosen_file + ".decipher")
+                    c = self.cipher.decrypt_file(chosen_file + ".cipher", chosen_file + ".decipher", self)
                     self.cipherResults.appendPlainText(c)
                     self.statusbar.showMessage("Ciphering done")
                 except:

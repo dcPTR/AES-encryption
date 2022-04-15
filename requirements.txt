@@ -3,6 +3,7 @@ click==7.1.2
 cryptography==36.0.2
 pyAesCrypt==6.0.0
 pycparser==2.21
+pycryptodome==3.14.1
 PyQt5==5.15.6
 pyqt5-plugins==5.15.4.2.2
 PyQt5-Qt5==5.15.2

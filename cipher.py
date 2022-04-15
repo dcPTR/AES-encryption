@@ -1,3 +1,5 @@
+import os
+
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import base64
@@ -62,7 +64,8 @@ class Cipher:
         plaintext = self.decryption_process(ciphertext)
         return plaintext.decode('utf-8').rstrip(' ')
 
-    def encrypt_file(self, source_file, dest_file):
+    def encrypt_file(self, source_file, dest_file, obj):
+        filesize = os.path.getsize(source_file)
         with open(source_file, 'rb') as f:
             with open(dest_file, 'wb') as f2:
                 while True:
@@ -70,9 +73,10 @@ class Cipher:
                     if not data:
                         break
                     f2.write(self.encryption_process(data))
-                    # tutaj progress bar
+                    obj.progressBar.setValue(int(f.tell()/filesize*100))
 
-    def decrypt_file(self, source_file, dest_file):
+    def decrypt_file(self, source_file, dest_file, obj):
+        filesize = os.path.getsize(source_file)
         with open(source_file, 'rb') as f:
             with open(dest_file, 'wb') as f2:
                 while True:
@@ -80,4 +84,4 @@ class Cipher:
                     if not data:
                         break
                     f2.write(self.decryption_process(data))
-                    # tutaj progress bar
+                    obj.progressBar.setValue(int(f.tell()/filesize*100))
