@@ -33,7 +33,7 @@ class Cipher:
         self.iv = iv
 
     def encrypt(self):
-        # encrypt the file in AED
+        # encrypt the file in AES
         # use the encrypt_file function
         # return the ciphertext
         pass
@@ -44,14 +44,7 @@ class Cipher:
         return self.aes.encrypt(plaintext)
 
     def encrypt_text(self, plaintext):
-        # split string plaintext into blocks of 16 bytes
-        # if it's not a multiple of 16, pad it
-        # then encrypt each block
-        # then join the encrypted blocks together
-        # make it a string
-        # and return the ciphertext in base64
-
-        ciphertext = self.encryption_process(plaintext)
+        ciphertext = self.encryption_process(plaintext.encode('utf-8'))
         return base64.b64encode(ciphertext).decode('utf-8')
 
     def decryption_process(self, ciphertext):

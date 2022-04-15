@@ -22,9 +22,12 @@ class Window(QMainWindow, Ui_MainWindow):
     def cipherClicked(self):
         if self.cipherText.toPlainText() != "":
             self.statusbar.showMessage("Ciphering...")
-            c = self.cipher.encrypt_text(self.cipherText.toPlainText())
-            self.cipherResults.setPlainText(c)
-            self.statusbar.showMessage("Ciphering done")
+            try:
+                c = self.cipher.encrypt_text(self.cipherText.toPlainText())
+                self.cipherResults.setPlainText(c)
+                self.statusbar.showMessage("Ciphering done")
+            except:
+                self.statusbar.showMessage("Ciphering failed")
         else:
             chosen_file = self.selectFile()
             print(chosen_file)
@@ -41,9 +44,12 @@ class Window(QMainWindow, Ui_MainWindow):
     def decipherClicked(self):
         if self.cipherText.toPlainText() != "":
             self.statusbar.showMessage("Deciphering...")
-            c = self.cipher.decrypt_text(self.cipherText.toPlainText())
-            self.cipherResults.appendPlainText(c)
-            self.statusbar.showMessage("Deciphering done")
+            try:
+                c = self.cipher.decrypt_text(self.cipherText.toPlainText())
+                self.cipherResults.setPlainText(c)
+                self.statusbar.showMessage("Deciphering done")
+            except:
+                self.statusbar.showMessage("Deciphering failed")
         else:
             chosen_file = self.selectFile()
             print(chosen_file)
@@ -75,8 +81,8 @@ class Window(QMainWindow, Ui_MainWindow):
     def about(self):
         QMessageBox.about(
             self,
-            "About Sample Editor",
-            "<p>A sample text editor app built with:</p>"
+            "Simple AES Encryption",
+            "<p>A simple encryption app built with:</p>"
             "<p>- PyQt</p>"
             "<p>- Qt Designer</p>"
             "<p>- Python</p>",
