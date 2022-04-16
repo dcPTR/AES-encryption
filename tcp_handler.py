@@ -70,6 +70,10 @@ class TCPHandler:
     def disconnect(self):
         if self.is_connected:
             self.Client.close()
+            self.Connected = False
+            return True
+        
+        return False
 
     def recv(self):
         if len(self.Received) > 0:
@@ -77,7 +81,7 @@ class TCPHandler:
 
         return ""
 
-
+"""
 from threading import Thread
 
 def print_receive(tcp):
@@ -107,3 +111,4 @@ while True:
 
 tcp.stop_listen()
 thread.join()
+"""

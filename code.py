@@ -1,8 +1,9 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QMessageBox, QFileDialog
 from PyQt5 import uic
+from threading import Thread
 from cipher import Cipher
-
+from tcp_handler import TCPHandler
 from main import Ui_MainWindow
 
 
@@ -18,6 +19,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.statusbar.showMessage("Ready")
         self.cipherButton.clicked.connect(self.cipherClicked)
         self.decipherButton.clicked.connect(self.decipherClicked)
+        self.runServerButton.clicked.connect(self.runServerClicked)
+        self.stopServerButton.clicked.connect(self.stopServerClicked)
+        self.connectButton.clicked.connect(self.connectClicked)
+        self.disconnectButton.clicked.connect(self.disconnectClicked)
 
     def cipherClicked(self):
         if self.cipherText.toPlainText() != "":
@@ -25,6 +30,8 @@ class Window(QMainWindow, Ui_MainWindow):
             try:
                 c = self.cipher.encrypt_text(self.cipherText.toPlainText())
                 self.cipherResults.setPlainText(c)
+                if (self.tcp is not None and self.tcp.is_connected()):
+                    self.tcp.send(c)
                 self.statusbar.showMessage("Ciphering done")
             except:
                 self.statusbar.showMessage("Ciphering failed")
@@ -47,6 +54,10 @@ class Window(QMainWindow, Ui_MainWindow):
             try:
                 c = self.cipher.decrypt_text(self.cipherText.toPlainText())
                 self.cipherResults.setPlainText(c)
+                print (f"{self.tcp is not None} {self.tcp.is_connected()}")
+                if (self.tcp is not None and self.tcp.is_connected()):
+                    print("plizzz")
+                    self.tcp.send(c)
                 self.statusbar.showMessage("Deciphering done")
             except:
                 self.statusbar.showMessage("Deciphering failed")
@@ -87,6 +98,54 @@ class Window(QMainWindow, Ui_MainWindow):
             "<p>- Qt Designer</p>"
             "<p>- Python</p>",
         )
+
+    def runServerClicked(self):
+        if self.serverPort.text() == "" or self.clientPort.text() == "":
+            return
+
+        try:
+            self.tcp = TCPHandler(int(self.serverPort.text()), int(self.clientPort.text()))
+        except:
+            return
+
+        self.serverThread = Thread(target = self.tcp.listen)
+        self.serverThread.start()
+        self.connectButton.setEnabled(True)
+        self.stopServerButton.setEnabled(True)
+        self.runServerButton.setEnabled(False)
+
+
+    def connectClicked(self):
+        if self.tcp.try_connect() == False:
+            return
+
+        self.connectButton.setEnabled(False)
+        self.disconnectButton.setEnabled(True)
+        self.recvThread = Thread(target = self.handleReceiving)
+        self.recvThread.start()
+        
+
+    def disconnectClicked(self):
+        if self.tcp.disconnect() == False:
+            return
+
+        self.connectButton.setEnabled(True)
+        self.disconnectButton.setEnabled(False)
+        self.recvThread.join()
+
+    def stopServerClicked(self):
+        self.tcp.stop_listen()
+        self.serverThread.join()
+
+    def handleReceiving(self):
+        while self.tcp is not None and self.tcp.is_connected():
+            msg = self.tcp.recv()
+            if len(msg) == 0:
+                continue
+            
+            self.cipherResults.setPlainText(msg)
+        
+            
 
 
 class FindReplaceDialog(QDialog):
