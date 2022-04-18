@@ -1,8 +1,23 @@
 from logging.config import stopListening
 import socket, sys
+from enum import Enum
+class MsgType(Enum):
+    MSG = 1
+    ACK = 2
+    NUM = 3
+
+class Package:
+    ID = "|.|"
+
+    def __init__ (self, cmd, param, msg):
+        self.cmd = cmd
+        self.param = param
+        self.msg = msg
+
+    def get_request(self):
+        return f"{Package.ID}{self.cmd.value}{Package.ID}{self.param}{Package.ID}{self.msg}{Package.ID}"
 
 class TCPHandler:
-    ID = "|.|"
     MAX_BUF = 8192
 
     def __init__(self, serverPort, clientPort):
@@ -31,8 +46,12 @@ class TCPHandler:
             except:
                 continue
             msg = ""
+            cmd = ""
+            param = ""
             buf = ""
+            read_cmd = False
             read_msg = False
+            read_param = False
             c.settimeout(5)
             while self.Listening:
                 try:
@@ -42,16 +61,32 @@ class TCPHandler:
 
                 if read_msg:
                     msg += data.decode()
+                elif read_cmd:
+                    cmd += data.decode()
+                elif read_param:
+                    param += data.decode()
                 else:
                     buf += data.decode()
 
-                if buf.startswith(TCPHandler.ID):
-                    read_msg = True
+                if buf.startswith(Package.ID):
+                    read_cmd = True
                     buf = ""
-                elif msg.endswith(TCPHandler.ID):
+                elif cmd.endswith(Package.ID):
+                    read_cmd = False
+                    read_param = True
+                    cmd = cmd[0:-3]
+                elif param.endswith(Package.ID):
+                    read_param = False
+                    read_msg = True
+                    param = param[0:-3]
+                elif msg.endswith(Package.ID):
                     read_msg = False
-                    self.Received.append(msg[0:-3])
+                    msg = msg[0:-3]
+                    pck = Package(MsgType(int(cmd)), param, msg)
+                    self.Received.append(pck)
                     msg = ""
+                    cmd = ""
+                    param = ""
                 
             c.close()
     
@@ -65,8 +100,30 @@ class TCPHandler:
     def is_connected(self):
         return self.Connected
 
-    def send(self, message):
-        self.Client.send(f"{TCPHandler.ID}{message}{TCPHandler.ID}".encode())
+    def get_message_parts(self, msg):
+        parts = []
+        while len(msg) > 0:
+            if len(msg) <= TCPHandler.MAX_BUF:
+                parts.append(msg)
+                break
+            else:
+                parts.append(msg[0:TCPHandler.MAX_BUF - 1])
+                msg = msg[TCPHandler.MAX_BUF:]
+
+        return parts
+
+    def send_message(self, message):
+        parts = self.get_message_parts(message)
+        numPack = Package(MsgType.NUM, len(parts), "")
+        self.send_package(numPack)
+        i = 0
+        for p in parts:
+            pack = Package(MsgType.MSG, i, p)
+            self.send_package(pack)
+            i += 1
+
+    def send_package(self, package):
+        self.Client.send(package.get_request().encode())
 
     def disconnect(self):
         if self.is_connected:
@@ -78,38 +135,29 @@ class TCPHandler:
 
     def recv(self):
         if len(self.Received) > 0:
-            return self.Received.pop()
+            if self.Received[0].cmd != MsgType.NUM:
+                return None
 
-        return ""
+            count = int(self.Received[0].param)
+            current = 0
+            indexes = []
+            while current < count:
+                i = 0
+                for p in self.Received:
+                    if p.cmd == MsgType.MSG and int(p.param) == current:
+                        indexes.append(i)
+                        break
+                    i += 1
+                current += 1
 
-"""
-from threading import Thread
+            if (len(indexes) == count):
+                msg = ""
+                for index in indexes:
+                    msg += self.Received[index].msg
 
-def print_receive(tcp):
-    msg = tcp.recv()
-    if len(msg) > 0:
-        print(f"received {msg}")
+                for i in range(len(indexes) + 1):
+                    self.Received.pop(0)
 
-tcp = TCPHandler(int(input("server port: ")), int(input("client port: ")))
-thread = Thread(target = tcp.listen)
-thread.start()
+                return msg
 
-while True:
-    msg = input("press any key to connect or x to exit")
-    if msg == "x":
-        break
-
-    if tcp.try_connect():
-        while True:
-            msg = input("type message to send or r to receive or x to exit")
-            if msg == "x":
-                break
-
-            if msg == "r":
-                print_receive(tcp)
-
-            tcp.send(msg)
-
-tcp.stop_listen()
-thread.join()
-"""
+        return None

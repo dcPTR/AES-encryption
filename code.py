@@ -33,7 +33,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 c = self.cipher.encrypt_text(self.cipherText.toPlainText())
                 self.cipherResults.setPlainText(c)
                 if (self.tcp is not None and self.tcp.is_connected()):
-                    self.tcp.send(c)
+                    self.tcp.send_message(c)
                 self.statusbar.showMessage("Ciphering done")
             except:
                 self.statusbar.showMessage("Ciphering failed")
@@ -56,9 +56,8 @@ class Window(QMainWindow, Ui_MainWindow):
             try:
                 c = self.cipher.decrypt_text(self.cipherText.toPlainText())
                 self.cipherResults.setPlainText(c)
-                print (f"{self.tcp is not None} {self.tcp.is_connected()}")
                 if (self.tcp is not None and self.tcp.is_connected()):
-                    self.tcp.send(c)
+                    self.tcp.send_message(c)
                 self.statusbar.showMessage("Deciphering done")
             except:
                 self.statusbar.showMessage("Deciphering failed")
@@ -145,7 +144,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def handleReceiving(self):
         while self.tcp is not None and self.tcp.is_connected():
             msg = self.tcp.recv()
-            if len(msg) == 0:
+            if msg == None:
                 continue
             self.signal.emit(msg)
 
