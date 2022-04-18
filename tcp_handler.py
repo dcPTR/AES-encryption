@@ -23,40 +23,43 @@ class TCPHandler:
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind(("localhost", self.ServerPort))
         server.listen()
+        server.settimeout(5)
 
-        c, addr = server.accept()
-        msg = ""
-        buf = ""
-        read_msg = False
-        c.settimeout(5)
         while self.Listening:
             try:
-                data = c.recv(1)
+                c, addr = server.accept()
             except:
                 continue
+            msg = ""
+            buf = ""
+            read_msg = False
+            c.settimeout(5)
+            while self.Listening:
+                try:
+                    data = c.recv(1)
+                except:
+                    continue
 
-            if read_msg:
-                msg += data.decode()
-            else:
-                buf += data.decode()
+                if read_msg:
+                    msg += data.decode()
+                else:
+                    buf += data.decode()
 
-            if buf.startswith(TCPHandler.ID):
-                read_msg = True
-                buf = ""
-            elif msg.endswith(TCPHandler.ID):
-                read_msg = False
-                self.Received.append(msg[0:-3])
-                msg = ""
-            
-        c.close()
+                if buf.startswith(TCPHandler.ID):
+                    read_msg = True
+                    buf = ""
+                elif msg.endswith(TCPHandler.ID):
+                    read_msg = False
+                    self.Received.append(msg[0:-3])
+                    msg = ""
+                
+            c.close()
     
     def try_connect(self):
         if self.is_connected():
             return False
-        
-        
             
-        self.Connected = self.Client.connect_ex(("localhost", self.ClientPort))
+        self.Connected = not self.Client.connect_ex(("localhost", self.ClientPort))
         return self.Connected
 
     def is_connected(self):

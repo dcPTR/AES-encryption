@@ -139,6 +139,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.connectButton.setEnabled(False)
         self.disconnectButton.setEnabled(False)
         self.stopServerButton.setEnabled(False)
+        self.runServerButton.setEnabled(True)
         self.serverThread.join()
 
     def handleReceiving(self):
