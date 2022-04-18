@@ -3,6 +3,7 @@ import socket, sys
 
 class TCPHandler:
     ID = "|.|"
+    MAX_BUF = 8192
 
     def __init__(self, serverPort, clientPort):
         self.ServerPort = serverPort
@@ -53,12 +54,9 @@ class TCPHandler:
         if self.is_connected():
             return False
         
-        try:
-            self.Client.connect(("localhost", self.ClientPort))
-        except:
-            self.Connected = False
+        
             
-        self.Connected = True
+        self.Connected = self.Client.connect_ex(("localhost", self.ClientPort))
         return self.Connected
 
     def is_connected(self):

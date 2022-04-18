@@ -1,5 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QMessageBox, QFileDialog
+from PyQt5 import QtCore
 from PyQt5 import uic
 from threading import Thread
 from cipher import Cipher
@@ -8,6 +9,7 @@ from main import Ui_MainWindow
 
 
 class Window(QMainWindow, Ui_MainWindow):
+    signal = QtCore.pyqtSignal(str)
     def __init__(self, parent=None, cipher=None):
         super().__init__(parent)
         self.setupUi(self)
@@ -56,7 +58,6 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.cipherResults.setPlainText(c)
                 print (f"{self.tcp is not None} {self.tcp.is_connected()}")
                 if (self.tcp is not None and self.tcp.is_connected()):
-                    print("plizzz")
                     self.tcp.send(c)
                 self.statusbar.showMessage("Deciphering done")
             except:
@@ -83,7 +84,7 @@ class Window(QMainWindow, Ui_MainWindow):
         return QFileDialog.getOpenFileName()[0]
 
     def connectSignalsSlots(self):
-        pass
+        self.signal.connect(self.updateCipherResult)
 
     def findAndReplace(self):
         dialog = FindReplaceDialog(self)
@@ -135,6 +136,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def stopServerClicked(self):
         self.tcp.stop_listen()
+        self.connectButton.setEnabled(False)
+        self.disconnectButton.setEnabled(False)
+        self.stopServerButton.setEnabled(False)
         self.serverThread.join()
 
     def handleReceiving(self):
@@ -142,8 +146,11 @@ class Window(QMainWindow, Ui_MainWindow):
             msg = self.tcp.recv()
             if len(msg) == 0:
                 continue
-            
-            self.cipherResults.setPlainText(msg)
+            self.signal.emit(msg)
+
+    def updateCipherResult(self, text):
+        self.cipherResults.setPlainText(text)
+
         
             
 
