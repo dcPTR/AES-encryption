@@ -1,6 +1,7 @@
-from logging.config import stopListening
+#from logging.config import stopListening
 import socket, sys
 from enum import Enum
+
 class MsgType(Enum):
     MSG = 1
     ACK = 2
@@ -9,7 +10,7 @@ class MsgType(Enum):
 class Package:
     ID = "|.|"
 
-    def __init__ (self, cmd, param, msg):
+    def __init__ (self, cmd, param = "", msg = ""):
         self.cmd = cmd
         self.param = param
         self.msg = msg
@@ -17,16 +18,19 @@ class Package:
     def get_request(self):
         return f"{Package.ID}{self.cmd.value}{Package.ID}{self.param}{Package.ID}{self.msg}{Package.ID}"
 
-class TCPHandler:
-    MAX_BUF = 8192
-
+class TCPHandler():
+    MAX_BUF = 4096
     def __init__(self, serverPort, clientPort):
         self.ServerPort = serverPort
         self.ClientPort = clientPort
         self.Client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.Connected = False
         self.Listening = True
+        self.JustAcknowledged = False
         self.Received = []
+
+    def connectAckListener(self, method):
+        self.ack_signal.connect(method)
 
     def stop_listen(self):
         self.Listening = False
@@ -112,9 +116,9 @@ class TCPHandler:
 
         return parts
 
-    def send_message(self, message):
+    def send_message(self, message, fileName = ""):
         parts = self.get_message_parts(message)
-        numPack = Package(MsgType.NUM, len(parts), "")
+        numPack = Package(MsgType.NUM, len(parts), f"{fileName}")
         self.send_package(numPack)
         i = 0
         for p in parts:
@@ -133,31 +137,57 @@ class TCPHandler:
         
         return False
 
+    def hasJustAcknowledged(self):
+        return self.JustAcknowledged
+
     def recv(self):
+        self.JustAcknowledged = False
         if len(self.Received) > 0:
+            if self.handleAckMessages():
+                return (None, None)
             if self.Received[0].cmd != MsgType.NUM:
-                return None
+                return (None, None)
 
-            count = int(self.Received[0].param)
-            current = 0
-            indexes = []
-            while current < count:
-                i = 0
-                for p in self.Received:
-                    if p.cmd == MsgType.MSG and int(p.param) == current:
-                        indexes.append(i)
-                        break
-                    i += 1
-                current += 1
+            partsCount = int(self.Received[0].param)
+            fileName = self.Received[0].msg
+            indexes = self.collectMessagePartsIndexes(partsCount)
+            if (len(indexes) == partsCount):
+                self.sendAck()
+                return (self.joinMessage(indexes), fileName)
 
-            if (len(indexes) == count):
-                msg = ""
-                for index in indexes:
-                    msg += self.Received[index].msg
+        return (None, None)
 
-                for i in range(len(indexes) + 1):
-                    self.Received.pop(0)
+    def handleAckMessages(self):
+        if self.Received[0].cmd == MsgType.ACK:
+            self.JustAcknowledged = True
+            self.Received.pop(0)
+            return True
 
-                return msg
+        return False
 
-        return None
+    def collectMessagePartsIndexes(self, count):
+        current = 0
+        indexes = []
+        while current < count:
+            i = 0
+            for p in self.Received:
+                if p.cmd == MsgType.MSG and int(p.param) == current:
+                    indexes.append(i)
+                    break
+                i += 1
+            current += 1
+        
+        return indexes
+
+    def sendAck(self):
+        pck = Package(MsgType.ACK)
+        self.send_package(pck)
+
+    def joinMessage(self, indexes):
+        msg = ""
+        for index in indexes:
+            msg += self.Received[index].msg
+
+        for i in range(len(indexes) + 1):
+            self.Received.pop(0)
+        return msg
