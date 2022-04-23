@@ -1,4 +1,5 @@
 import sys
+import os
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QMessageBox, QFileDialog
 from PyQt5 import QtCore
 from PyQt5 import uic
@@ -48,7 +49,7 @@ class Window(QMainWindow, Ui_MainWindow):
                     self.cipher.encrypt_file(chosen_file, result_file_name, self)
                     if (self.tcp is not None and self.tcp.is_connected()):
                         f = open(result_file_name,'rb')
-                        self.tcp.send_message(f.read(), result_file_name)
+                        self.tcp.send_message(f.read(), os.path.basename(result_file_name))
                     self.statusbar.showMessage("Ciphering done")
                 except:
                     self.statusbar.showMessage("Ciphering failed")
@@ -81,7 +82,7 @@ class Window(QMainWindow, Ui_MainWindow):
                     self.cipher.decrypt_file(chosen_file, result_file_name, self)
                     if (self.tcp is not None and self.tcp.is_connected()):
                         f = open(result_file_name,'rb')
-                        self.tcp.send_message(f.read(), result_file_name)
+                        self.tcp.send_message(f.read(), os.path.basename(result_file_name))
 
                     self.statusbar.showMessage("Deciphering done")
                 except:
