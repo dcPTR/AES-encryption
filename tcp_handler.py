@@ -59,38 +59,40 @@ class TCPHandler():
             c.settimeout(5)
             while self.Listening:
                 try:
-                    data = c.recv(1)
+                    data = c.recv(TCPHandler.MAX_BUF).decode()
                 except:
                     continue
 
-                if read_msg:
-                    msg += data.decode()
-                elif read_cmd:
-                    cmd += data.decode()
-                elif read_param:
-                    param += data.decode()
-                else:
-                    buf += data.decode()
+                for i in range(len(data)):
+                    if read_msg:
+                        msg += data[i]
+                    elif read_cmd:
+                        cmd += data[i]
+                    elif read_param:
+                        param += data[i]
+                    else:
+                        buf += data[i]
+                    i += 1
 
-                if buf.startswith(Package.ID):
-                    read_cmd = True
-                    buf = ""
-                elif cmd.endswith(Package.ID):
-                    read_cmd = False
-                    read_param = True
-                    cmd = cmd[0:-3]
-                elif param.endswith(Package.ID):
-                    read_param = False
-                    read_msg = True
-                    param = param[0:-3]
-                elif msg.endswith(Package.ID):
-                    read_msg = False
-                    msg = msg[0:-3]
-                    pck = Package(MsgType(int(cmd)), param, msg)
-                    self.Received.append(pck)
-                    msg = ""
-                    cmd = ""
-                    param = ""
+                    if buf.startswith(Package.ID):
+                        read_cmd = True
+                        buf = ""
+                    elif cmd.endswith(Package.ID):
+                        read_cmd = False
+                        read_param = True
+                        cmd = cmd[0:-3]
+                    elif param.endswith(Package.ID):
+                        read_param = False
+                        read_msg = True
+                        param = param[0:-3]
+                    elif msg.endswith(Package.ID):
+                        read_msg = False
+                        msg = msg[0:-3]
+                        pck = Package(MsgType(int(cmd)), param, msg)
+                        self.Received.append(pck)
+                        msg = ""
+                        cmd = ""
+                        param = ""
                 
             c.close()
     
