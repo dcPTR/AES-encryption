@@ -26,6 +26,14 @@ class Window(QMainWindow, Ui_MainWindow):
         self.stopServerButton.clicked.connect(self.stopServerClicked)
         self.connectButton.clicked.connect(self.connectClicked)
         self.disconnectButton.clicked.connect(self.disconnectClicked)
+        self.cipherModeCBC.clicked.connect(self.cipherModeCBCClicked)
+        self.cipherModeECB.clicked.connect(self.cipherModeECBClicked)
+
+    def cipherModeCBCClicked(self):
+        self.cipher.set_mode("CBC")
+
+    def cipherModeECBClicked(self):
+        self.cipher.set_mode("ECB")
 
     def cipherClicked(self):
         self.cipherText.setStyleSheet("background:white")
@@ -34,7 +42,7 @@ class Window(QMainWindow, Ui_MainWindow):
             try:
                 c = self.cipher.encrypt_text(self.cipherText.toPlainText())
                 self.cipherResults.setPlainText(c)
-                if (self.tcp is not None and self.tcp.is_connected()):
+                if self.tcp is not None and self.tcp.is_connected():
                     self.tcp.send_message(c)
                 self.statusbar.showMessage("Ciphering done")
             except:
@@ -47,7 +55,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 try:
                     result_file_name = chosen_file + ".cipher"
                     self.cipher.encrypt_file(chosen_file, result_file_name, self)
-                    if (self.tcp is not None and self.tcp.is_connected()):
+                    if self.tcp is not None and self.tcp.is_connected():
                         f = open(result_file_name,'rb')
                         self.tcp.send_message(f.read(), os.path.basename(result_file_name))
                     self.statusbar.showMessage("Ciphering done")
@@ -63,7 +71,7 @@ class Window(QMainWindow, Ui_MainWindow):
             try:
                 c = self.cipher.decrypt_text(self.cipherText.toPlainText())
                 self.cipherResults.setPlainText(c)
-                if (self.tcp is not None and self.tcp.is_connected()):
+                if self.tcp is not None and self.tcp.is_connected():
                     self.tcp.send_message(c)
                 self.statusbar.showMessage("Deciphering done")
             except:
@@ -76,11 +84,16 @@ class Window(QMainWindow, Ui_MainWindow):
                 try:
                     if chosen_file.endswith(".cipher"):
                         result_file_name = chosen_file.replace(".cipher", ".decipher")
+                        # check if file has 2 extensions
+                        # if yes find the first extension and save it the variable ext
+                        if chosen_file.count(".") > 1:
+                            ext = chosen_file.split(".")[-2]
+                            result_file_name = result_file_name + "." + ext
                     else:
                         result_file_name = chosen_file + ".decipher"
 
                     self.cipher.decrypt_file(chosen_file, result_file_name, self)
-                    if (self.tcp is not None and self.tcp.is_connected()):
+                    if self.tcp is not None and self.tcp.is_connected():
                         f = open(result_file_name,'rb')
                         self.tcp.send_message(f.read(), os.path.basename(result_file_name))
 

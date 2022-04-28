@@ -1,16 +1,18 @@
-#from logging.config import stopListening
+# from logging.config import stopListening
 import socket, sys
 from enum import Enum
+
 
 class MsgType(Enum):
     MSG = 1
     ACK = 2
     NUM = 3
 
+
 class Package:
     ID = "|.|"
 
-    def __init__ (self, cmd, param = "", msg = ""):
+    def __init__(self, cmd, param="", msg=""):
         self.cmd = cmd
         self.param = param
         self.msg = msg
@@ -18,8 +20,10 @@ class Package:
     def get_request(self):
         return f"{Package.ID}{self.cmd.value}{Package.ID}{self.param}{Package.ID}{self.msg}{Package.ID}"
 
+
 class TCPHandler():
     MAX_BUF = 4096
+
     def __init__(self, serverPort, clientPort):
         self.ServerPort = serverPort
         self.ClientPort = clientPort
@@ -93,13 +97,13 @@ class TCPHandler():
                         msg = ""
                         cmd = ""
                         param = ""
-                
+
             c.close()
-    
+
     def try_connect(self):
         if self.is_connected():
             return False
-            
+
         self.Connected = not self.Client.connect_ex(("localhost", self.ClientPort))
         return self.Connected
 
@@ -118,7 +122,7 @@ class TCPHandler():
 
         return parts
 
-    def send_message(self, message, fileName = ""):
+    def send_message(self, message, fileName=""):
         parts = self.get_message_parts(message)
         numPack = Package(MsgType.NUM, len(parts), f"{fileName}")
         self.send_package(numPack)
@@ -136,7 +140,7 @@ class TCPHandler():
             self.Client.close()
             self.Connected = False
             return True
-        
+
         return False
 
     def hasJustAcknowledged(self):
@@ -178,7 +182,7 @@ class TCPHandler():
                     break
                 i += 1
             current += 1
-        
+
         return indexes
 
     def sendAck(self):
