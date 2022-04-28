@@ -1,4 +1,5 @@
 import sys
+import os
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QMessageBox, QFileDialog
 from PyQt5 import QtCore
 from PyQt5 import uic
@@ -25,14 +26,23 @@ class Window(QMainWindow, Ui_MainWindow):
         self.stopServerButton.clicked.connect(self.stopServerClicked)
         self.connectButton.clicked.connect(self.connectClicked)
         self.disconnectButton.clicked.connect(self.disconnectClicked)
+        self.cipherModeCBC.clicked.connect(self.cipherModeCBCClicked)
+        self.cipherModeECB.clicked.connect(self.cipherModeECBClicked)
+
+    def cipherModeCBCClicked(self):
+        self.cipher.set_mode("CBC")
+
+    def cipherModeECBClicked(self):
+        self.cipher.set_mode("ECB")
 
     def cipherClicked(self):
+        self.cipherText.setStyleSheet("background:white")
         if self.cipherText.toPlainText() != "":
             self.statusbar.showMessage("Ciphering...")
             try:
                 c = self.cipher.encrypt_text(self.cipherText.toPlainText())
                 self.cipherResults.setPlainText(c)
-                if (self.tcp is not None and self.tcp.is_connected()):
+                if self.tcp is not None and self.tcp.is_connected():
                     self.tcp.send_message(c)
                 self.statusbar.showMessage("Ciphering done")
             except:
@@ -43,7 +53,11 @@ class Window(QMainWindow, Ui_MainWindow):
             if chosen_file != "":
                 self.statusbar.showMessage("Ciphering...")
                 try:
-                    self.cipher.encrypt_file(chosen_file, chosen_file + ".cipher", self)
+                    result_file_name = chosen_file + ".cipher"
+                    self.cipher.encrypt_file(chosen_file, result_file_name, self)
+                    if self.tcp is not None and self.tcp.is_connected():
+                        f = open(result_file_name,'rb')
+                        self.tcp.send_message(f.read(), os.path.basename(result_file_name))
                     self.statusbar.showMessage("Ciphering done")
                 except:
                     self.statusbar.showMessage("Ciphering failed")
@@ -51,12 +65,13 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.statusbar.showMessage("No file selected")
 
     def decipherClicked(self):
+        self.cipherText.setStyleSheet("background:white")
         if self.cipherText.toPlainText() != "":
             self.statusbar.showMessage("Deciphering...")
             try:
                 c = self.cipher.decrypt_text(self.cipherText.toPlainText())
                 self.cipherResults.setPlainText(c)
-                if (self.tcp is not None and self.tcp.is_connected()):
+                if self.tcp is not None and self.tcp.is_connected():
                     self.tcp.send_message(c)
                 self.statusbar.showMessage("Deciphering done")
             except:
@@ -69,10 +84,19 @@ class Window(QMainWindow, Ui_MainWindow):
                 try:
                     if chosen_file.endswith(".cipher"):
                         result_file_name = chosen_file.replace(".cipher", ".decipher")
+                        # check if file has 2 extensions
+                        # if yes find the first extension and save it the variable ext
+                        if chosen_file.count(".") > 1:
+                            ext = chosen_file.split(".")[-2]
+                            result_file_name = result_file_name + "." + ext
                     else:
                         result_file_name = chosen_file + ".decipher"
 
                     self.cipher.decrypt_file(chosen_file, result_file_name, self)
+                    if self.tcp is not None and self.tcp.is_connected():
+                        f = open(result_file_name,'rb')
+                        self.tcp.send_message(f.read(), os.path.basename(result_file_name))
+
                     self.statusbar.showMessage("Deciphering done")
                 except:
                     self.statusbar.showMessage("Deciphering failed")
@@ -143,13 +167,24 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def handleReceiving(self):
         while self.tcp is not None and self.tcp.is_connected():
-            msg = self.tcp.recv()
+            msg, fileName = self.tcp.recv()
+            if self.tcp.hasJustAcknowledged():
+                self.onMessageDelivered()
+
             if msg == None:
                 continue
-            self.signal.emit(msg)
+            if len(fileName) == 0:
+                self.signal.emit(msg)
+            else:
+                with open(fileName, 'wb') as f:
+                    f.write(msg.encode()) # bez encode() tez ni dziala :d/
+
 
     def updateCipherResult(self, text):
         self.cipherResults.setPlainText(text)
+
+    def onMessageDelivered(self):
+        self.cipherText.setStyleSheet("background:lightgreen")
 
         
             
