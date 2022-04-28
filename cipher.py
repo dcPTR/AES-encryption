@@ -76,5 +76,5 @@ class Cipher:
                     data = f.read(self.chunk_size)
                     if not data:
                         break
-                    f2.write(self.decryption_process(data))
+                    f2.write(self.decryption_process(data).rstrip(b' '))
                     obj.progressBar.setValue(int(f.tell()/filesize*100))
