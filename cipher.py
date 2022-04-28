@@ -9,7 +9,7 @@ class Cipher:
         self.key = get_random_bytes(16)
         self.mode = "ECB"
         self.cipher = None
-        self.iv = None
+        self.iv = get_random_bytes(16)
         self.block_size = None
         self.key_size = None
         self.aes = None
