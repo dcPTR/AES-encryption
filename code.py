@@ -61,8 +61,9 @@ class Window(QMainWindow, Ui_MainWindow):
                     result_file_name = chosen_file + ".cipher"
                     self.cipher.encrypt_file(chosen_file, result_file_name, self)
                     if self.tcp is not None and self.tcp.is_connected():
+                        print("Sending file")
                         f = open(result_file_name,'rb')
-                        self.tcp.send_message(f.read(), os.path.basename(result_file_name))
+                        self.tcp.send_message(f.read(), os.path.basename(result_file_name+".sent"))
                     self.statusbar.showMessage("Ciphering done")
                 except Exception as e:
                     print(e)
@@ -153,7 +154,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.connectButton.setEnabled(False)
         self.disconnectButton.setEnabled(True)
-        self.recvThread = Thread(target = self.handleReceiving)
+        self.recvThread = Thread(target=self.handleReceiving)
         self.recvThread.start()
         
 

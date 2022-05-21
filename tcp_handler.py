@@ -117,7 +117,7 @@ class TCPHandler():
                 parts.append(msg)
                 break
             else:
-                parts.append(msg[0:TCPHandler.MAX_BUF - 1])
+                parts.append(msg[0:TCPHandler.MAX_BUF])
                 msg = msg[TCPHandler.MAX_BUF:]
 
         return parts

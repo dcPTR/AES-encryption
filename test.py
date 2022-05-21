@@ -2,6 +2,8 @@ import unittest
 from unittest.mock import Mock
 import filecmp
 from cipher import Cipher
+from tcp_handler import TCPHandler
+
 
 class TestStringMethods(unittest.TestCase):
 
@@ -49,6 +51,13 @@ class TestStringMethods(unittest.TestCase):
         cipher.encrypt_file("testFiles/500.txt", "testFiles/500cipher.txt", mock)
         cipher.decrypt_file("testFiles/500cipher.txt", "testFiles/500decipher.txt", mock)
         self.assertTrue(filecmp.cmp("testFiles/500.txt", "testFiles/500decipher.txt"))
+
+    def test_message_parts(self):
+        tcp = TCPHandler(5000, 5001)
+        msg = "foobar"*(int(tcp.MAX_BUF/4))
+        parts = tcp.get_message_parts(msg)
+        merged = "".join(parts)
+        self.assertEqual(merged, msg)
 
 
 if __name__ == '__main__':
