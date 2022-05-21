@@ -1,4 +1,5 @@
 import os
+import struct
 
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
@@ -13,6 +14,7 @@ class Cipher:
         self.block_size = None
         self.key_size = None
         self.aes = None
+        # chunk_size equal to to 1 MB (2**20) as a power of 2
         self.chunk_size = 2**20
         self.set_mode(self.mode)
 
@@ -31,6 +33,7 @@ class Cipher:
 
     def set_iv(self, iv):
         self.iv = iv
+        self.set_mode(self.mode)
 
     def encrypt(self):
         # encrypt the file in AES
@@ -49,7 +52,7 @@ class Cipher:
 
     def decryption_process(self, ciphertext):
         if len(ciphertext) % 16 != 0:
-            ciphertext += b' ' * (16 - (len(ciphertext) % 16))
+            ciphertext = ciphertext[:-(len(ciphertext) % 16)]
         return self.aes.decrypt(ciphertext)
 
     def decrypt_text(self, ciphertext):
@@ -61,6 +64,8 @@ class Cipher:
         filesize = os.path.getsize(source_file)
         with open(source_file, 'rb') as f:
             with open(dest_file, 'wb') as f2:
+                f2.write(struct.pack('<Q', filesize))
+                f2.write(self.iv)
                 while True:
                     data = f.read(self.chunk_size)
                     if not data:
@@ -72,9 +77,12 @@ class Cipher:
         filesize = os.path.getsize(source_file)
         with open(source_file, 'rb') as f:
             with open(dest_file, 'wb') as f2:
+                originalsize = struct.unpack('<Q', f.read(struct.calcsize('Q')))[0]
+                self.set_iv(f.read(16))
                 while True:
                     data = f.read(self.chunk_size)
                     if not data:
                         break
-                    f2.write(self.decryption_process(data).rstrip(b' '))
+                    f2.write(self.decryption_process(data))
                     obj.progressBar.setValue(int(f.tell()/filesize*100))
+                f2.truncate(originalsize)
