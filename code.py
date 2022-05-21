@@ -17,6 +17,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.connectSignalsSlots()
         self.connectElements()
         self.cipher = cipher
+        self.tcp = None
 
     def connectElements(self):
         self.statusbar.showMessage("Ready")
@@ -45,7 +46,8 @@ class Window(QMainWindow, Ui_MainWindow):
                 if self.tcp is not None and self.tcp.is_connected():
                     self.tcp.send_message(c)
                 self.statusbar.showMessage("Ciphering done")
-            except:
+            except Exception as e:
+                print(e)
                 self.statusbar.showMessage("Ciphering failed")
         else:
             chosen_file = self.selectFile()
@@ -59,7 +61,8 @@ class Window(QMainWindow, Ui_MainWindow):
                         f = open(result_file_name,'rb')
                         self.tcp.send_message(f.read(), os.path.basename(result_file_name))
                     self.statusbar.showMessage("Ciphering done")
-                except:
+                except Exception as e:
+                    print(e)
                     self.statusbar.showMessage("Ciphering failed")
             else:
                 self.statusbar.showMessage("No file selected")
