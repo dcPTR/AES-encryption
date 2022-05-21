@@ -11,6 +11,7 @@ from main import Ui_MainWindow
 
 class Window(QMainWindow, Ui_MainWindow):
     signal = QtCore.pyqtSignal(str)
+
     def __init__(self, parent=None, cipher=None):
         super().__init__(parent)
         self.setupUi(self)
@@ -18,6 +19,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.connectElements()
         self.cipher = cipher
         self.tcp = None
+        self.serverThread = None
+        self.recvThread = None
 
     def connectElements(self):
         self.statusbar.showMessage("Ready")
@@ -77,7 +80,8 @@ class Window(QMainWindow, Ui_MainWindow):
                 if self.tcp is not None and self.tcp.is_connected():
                     self.tcp.send_message(c)
                 self.statusbar.showMessage("Deciphering done")
-            except:
+            except Exception as e:
+                print(e)
                 self.statusbar.showMessage("Deciphering failed")
         else:
             chosen_file = self.selectFile()
@@ -97,11 +101,12 @@ class Window(QMainWindow, Ui_MainWindow):
 
                     self.cipher.decrypt_file(chosen_file, result_file_name, self)
                     if self.tcp is not None and self.tcp.is_connected():
-                        f = open(result_file_name,'rb')
+                        f = open(result_file_name, 'rb')
                         self.tcp.send_message(f.read(), os.path.basename(result_file_name))
 
                     self.statusbar.showMessage("Deciphering done")
-                except:
+                except Exception as e:
+                    print(e)
                     self.statusbar.showMessage("Deciphering failed")
             else:
                 self.statusbar.showMessage("No file selected")
@@ -132,18 +137,18 @@ class Window(QMainWindow, Ui_MainWindow):
 
         try:
             self.tcp = TCPHandler(int(self.serverPort.text()), int(self.clientPort.text()))
-        except:
+        except Exception as e:
+            print(e)
             return
 
-        self.serverThread = Thread(target = self.tcp.listen)
+        self.serverThread = Thread(target=self.tcp.listen)
         self.serverThread.start()
         self.connectButton.setEnabled(True)
         self.stopServerButton.setEnabled(True)
         self.runServerButton.setEnabled(False)
 
-
     def connectClicked(self):
-        if self.tcp.try_connect() == False:
+        if not self.tcp.try_connect():
             return
 
         self.connectButton.setEnabled(False)
@@ -153,7 +158,7 @@ class Window(QMainWindow, Ui_MainWindow):
         
 
     def disconnectClicked(self):
-        if self.tcp.disconnect() == False:
+        if not self.tcp.disconnect():
             return
 
         self.connectButton.setEnabled(True)
@@ -170,17 +175,17 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def handleReceiving(self):
         while self.tcp is not None and self.tcp.is_connected():
-            msg, fileName = self.tcp.recv()
+            msg, filename = self.tcp.recv()
             if self.tcp.hasJustAcknowledged():
                 self.onMessageDelivered()
 
-            if msg == None:
+            if msg is None:
                 continue
-            if len(fileName) == 0:
+            if len(filename) == 0:
                 self.signal.emit(msg)
             else:
-                with open(fileName, 'wb') as f:
-                    f.write(msg.encode()) # bez encode() tez ni dziala :d/
+                with open(filename, 'wb') as f:
+                    f.write(msg.encode())
 
 
     def updateCipherResult(self, text):
@@ -189,16 +194,12 @@ class Window(QMainWindow, Ui_MainWindow):
     def onMessageDelivered(self):
         self.cipherText.setStyleSheet("background:lightgreen")
 
-        
-            
-
 
 class FindReplaceDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
         loadUi("main.ui", self)
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
