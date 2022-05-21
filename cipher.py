@@ -56,6 +56,9 @@ class Cipher:
         return self.aes.decrypt(ciphertext)
 
     def decrypt_text(self, ciphertext):
+        # to prevent TypeError: decrypt() cannot be called after encrypt()
+        # we recreate the cipher object (self.aes) using self.set_mode(self.mode)
+        self.set_mode(self.mode)
         ciphertext = base64.b64decode(ciphertext)
         plaintext = self.decryption_process(ciphertext)
         return plaintext.decode('utf-8').rstrip(' ')

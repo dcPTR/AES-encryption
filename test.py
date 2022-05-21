@@ -12,8 +12,24 @@ class TestStringMethods(unittest.TestCase):
         deciphered = cipher.decrypt_text(ciphered)
         self.assertEqual(deciphered, msg)
 
+    def test_encryption_CBC(self):
+        cipher = Cipher()
+        cipher.set_mode("CBC")
+        msg = "foobar"
+        ciphered = cipher.encrypt_text(msg)
+        deciphered = cipher.decrypt_text(ciphered)
+        self.assertEqual(deciphered, msg)
+
     def test_encrypt_file(self):
         cipher = Cipher()
+        mock = Mock()
+        cipher.encrypt_file("testFiles/1.txt", "testFiles/1cipher.txt", mock)
+        cipher.decrypt_file("testFiles/1cipher.txt", "testFiles/1decipher.txt", mock)
+        self.assertTrue(filecmp.cmp("testFiles/1.txt", "testFiles/1decipher.txt"))
+
+    def test_encrypt_file_CBC(self):
+        cipher = Cipher()
+        cipher.set_mode("CBC")
         mock = Mock()
         cipher.encrypt_file("testFiles/1.txt", "testFiles/1cipher.txt", mock)
         cipher.decrypt_file("testFiles/1cipher.txt", "testFiles/1decipher.txt", mock)
@@ -25,7 +41,15 @@ class TestStringMethods(unittest.TestCase):
         cipher.encrypt_file("testFiles/500.txt", "testFiles/500cipher.txt", mock)
         cipher.decrypt_file("testFiles/500cipher.txt", "testFiles/500decipher.txt", mock)
         self.assertTrue(filecmp.cmp("testFiles/500.txt", "testFiles/500decipher.txt"))
-        
+
+    def test_encrypt_big_file_CBC(self):
+        cipher = Cipher()
+        cipher.set_mode("CBC")
+        mock = Mock()
+        cipher.encrypt_file("testFiles/500.txt", "testFiles/500cipher.txt", mock)
+        cipher.decrypt_file("testFiles/500cipher.txt", "testFiles/500decipher.txt", mock)
+        self.assertTrue(filecmp.cmp("testFiles/500.txt", "testFiles/500decipher.txt"))
 
 
-unittest.main()
+if __name__ == '__main__':
+    unittest.main()
