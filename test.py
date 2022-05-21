@@ -57,6 +57,7 @@ class TestStringMethods(unittest.TestCase):
         msg = "foobar"*(int(tcp.MAX_BUF/4))
         parts = tcp.get_message_parts(msg)
         merged = "".join(parts)
+        tcp.disconnect()
         self.assertEqual(merged, msg)
 
 
