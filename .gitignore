@@ -1,8 +1,9 @@
 /cipherAES.py
 /domeTesting.py
 /venv/
-test_files
+testFiles
 __pycache__
 *.cipher
 *.cipher_new
 *.decipher
+*.decipher.*
