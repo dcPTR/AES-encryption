@@ -10,19 +10,31 @@ class MsgType(Enum):
 
 
 class Package:
-    ID = "|.|"
+    ID = ""#"|.|"
+    CMD_BYTES = 16
+    PARAM_BYTES = 64
 
-    def __init__(self, cmd, param="", msg=""):
+    def __init__(self, cmd, param="", msg=bytearray(0)):
         self.cmd = cmd
         self.param = param
         self.msg = msg
 
     def get_request(self):
-        return f"{Package.ID}{self.cmd.value}{Package.ID}{self.param}{Package.ID}{self.msg}{Package.ID}"
-
+        cmd_bytes = bytearray(str(self.cmd.value).encode())
+        print(f"cmd start {cmd_bytes}")
+        while len(cmd_bytes) < Package.CMD_BYTES:
+            cmd_bytes = bytearray('0'.encode()) + cmd_bytes
+        param_bytes = bytearray(str(self.param).encode())
+        while len(param_bytes) < Package.PARAM_BYTES:
+            param_bytes = bytearray('0'.encode()) + param_bytes
+            
+        print(cmd_bytes)
+        print(param_bytes)
+        print(self.msg)
+        return cmd_bytes + param_bytes + self.msg
 
 class TCPHandler():
-    MAX_BUF = 4096
+    MAX_BUF = 4096 * 2
 
     def __init__(self, serverPort, clientPort):
         self.ServerPort = serverPort
@@ -53,50 +65,21 @@ class TCPHandler():
                 c, addr = server.accept()
             except:
                 continue
-            msg = ""
-            cmd = ""
-            param = ""
-            buf = ""
-            read_cmd = False
-            read_msg = False
-            read_param = False
+            
             c.settimeout(5)
             while self.Listening:
                 try:
-                    data = c.recv(TCPHandler.MAX_BUF).decode()
-                except:
+                    data = c.recv(TCPHandler.MAX_BUF)
+                except Exception as e:
+                    print(f"exc {e}")
                     continue
 
-                for i in range(len(data)):
-                    if read_msg:
-                        msg += data[i]
-                    elif read_cmd:
-                        cmd += data[i]
-                    elif read_param:
-                        param += data[i]
-                    else:
-                        buf += data[i]
-                    i += 1
-
-                    if buf.startswith(Package.ID):
-                        read_cmd = True
-                        buf = ""
-                    elif cmd.endswith(Package.ID):
-                        read_cmd = False
-                        read_param = True
-                        cmd = cmd[0:-3]
-                    elif param.endswith(Package.ID):
-                        read_param = False
-                        read_msg = True
-                        param = param[0:-3]
-                    elif msg.endswith(Package.ID):
-                        read_msg = False
-                        msg = msg[0:-3]
-                        pck = Package(MsgType(int(cmd)), param, msg)
-                        self.Received.append(pck)
-                        msg = ""
-                        cmd = ""
-                        param = ""
+                cmd = data[0:Package.CMD_BYTES].decode()
+                param = data[Package.CMD_BYTES:Package.CMD_BYTES + Package.PARAM_BYTES].decode()
+                msg = data[Package.CMD_BYTES + Package.PARAM_BYTES:]
+                print(f"cmd {cmd}; {param}; {len(data)}")
+                pck = Package(MsgType(int(cmd)), param, msg)
+                self.Received.append(pck)
 
             c.close()
 
@@ -122,18 +105,22 @@ class TCPHandler():
 
         return parts
 
-    def send_message(self, message, fileName=""):
-        parts = self.get_message_parts(message)
-        numPack = Package(MsgType.NUM, len(parts), f"{fileName}")
+    def send_message(self, messageBytes, fileName=""):
+        msg = bytearray(messageBytes)
+        print(type(msg))
+        parts = self.get_message_parts(msg)
+        numPack = Package(MsgType.NUM, len(parts), bytearray(f"{fileName}".encode()))
         self.send_package(numPack)
         i = 0
         for p in parts:
+            print(f"p {type(p)}")
             pack = Package(MsgType.MSG, i, p)
             self.send_package(pack)
             i += 1
 
     def send_package(self, package):
-        self.Client.send(package.get_request().encode())
+        self.Client.send(package.get_request())
+        print("jea")
 
     def disconnect(self):
         if self.is_connected:
@@ -155,8 +142,9 @@ class TCPHandler():
                 return (None, None)
 
             partsCount = int(self.Received[0].param)
-            fileName = self.Received[0].msg
+            fileName = self.Received[0].msg.decode()
             indexes = self.collectMessagePartsIndexes(partsCount)
+            print (f"comp {len(indexes)} == {partsCount}")
             if (len(indexes) == partsCount):
                 self.sendAck()
                 return (self.joinMessage(indexes), fileName)
@@ -187,10 +175,11 @@ class TCPHandler():
 
     def sendAck(self):
         pck = Package(MsgType.ACK)
+        print ("Sendinh ack...")
         self.send_package(pck)
 
     def joinMessage(self, indexes):
-        msg = ""
+        msg = bytearray(0)
         for index in indexes:
             msg += self.Received[index].msg
 

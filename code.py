@@ -40,18 +40,18 @@ class Window(QMainWindow, Ui_MainWindow):
         self.cipher.set_mode("ECB")
 
     def cipherClicked(self):
-        self.cipherText.setStyleSheet("background:white")
+        self.cipherText.setStyleSheet("background-color:white")
         if self.cipherText.toPlainText() != "":
             self.statusbar.showMessage("Ciphering...")
-            try:
-                c = self.cipher.encrypt_text(self.cipherText.toPlainText())
-                self.cipherResults.setPlainText(c)
-                if self.tcp is not None and self.tcp.is_connected():
-                    self.tcp.send_message(c)
-                self.statusbar.showMessage("Ciphering done")
-            except Exception as e:
-                print(e)
-                self.statusbar.showMessage("Ciphering failed")
+           # try:
+            c = self.cipher.encrypt_text(self.cipherText.toPlainText())
+            self.cipherResults.setPlainText(c)
+            if self.tcp is not None and self.tcp.is_connected():
+                self.tcp.send_message(c.encode())
+            self.statusbar.showMessage("Ciphering done")
+            #except Exception as e:
+             #   print(e)
+              #  self.statusbar.showMessage("Ciphering failed")
         else:
             chosen_file = self.selectFile()
             print(chosen_file)
@@ -72,7 +72,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.statusbar.showMessage("No file selected")
 
     def decipherClicked(self):
-        self.cipherText.setStyleSheet("background:white")
+        self.cipherText.setStyleSheet("background-color:white")
         if self.cipherText.toPlainText() != "":
             self.statusbar.showMessage("Deciphering...")
             try:
@@ -182,18 +182,20 @@ class Window(QMainWindow, Ui_MainWindow):
 
             if msg is None:
                 continue
+
+            print(f";{filename}; {len(filename)}")
             if len(filename) == 0:
-                self.signal.emit(msg)
+                self.signal.emit(msg.decode())
             else:
                 with open(filename, 'wb') as f:
-                    f.write(msg.encode())
+                    f.write(msg)
 
 
     def updateCipherResult(self, text):
         self.cipherResults.setPlainText(text)
 
     def onMessageDelivered(self):
-        self.cipherText.setStyleSheet("background:lightgreen")
+        self.cipherText.setStyleSheet("background-color:lightgreen")
 
 
 class FindReplaceDialog(QDialog):
