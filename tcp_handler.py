@@ -111,16 +111,18 @@ class TCPHandler():
 
         return parts
 
-    def send_message(self, messageBytes, fileName=""):
+    def send_message(self, messageBytes, fileName="", gui=None):
         msg = bytearray(messageBytes)
         parts = self.get_message_parts(msg)
-        numPack = Package(MsgType.NUM, len(parts), bytearray(f"{fileName}".encode()))
+        n = len(parts)
+        numPack = Package(MsgType.NUM, n, bytearray(f"{fileName}".encode()))
         self.send_package(numPack)
-        i = 0
-        for p in parts:
+
+        for i, p in enumerate(parts):
             pack = Package(MsgType.MSG, i, p)
             self.send_package(pack)
-            i += 1
+            if gui is not None:
+                gui.update_progress(i, n-1)
 
     def send_package(self, package):
         self.Client.send(package.get_request())

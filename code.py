@@ -63,7 +63,7 @@ class Window(QMainWindow, Ui_MainWindow):
                     if self.tcp is not None and self.tcp.is_connected():
                         print("Sending file")
                         f = open(result_file_name,'rb')
-                        self.tcp.send_message(f.read(), os.path.basename(result_file_name+".sent"))
+                        self.tcp.send_message(f.read(), os.path.basename(result_file_name+".sent"), self)
                     self.statusbar.showMessage("Ciphering done")
                 except Exception as e:
                     print(e)
@@ -196,6 +196,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def onMessageDelivered(self):
         self.cipherText.setStyleSheet("background-color:lightgreen")
+
+    def update_progress(self, i, n):
+        self.progressBar.setValue(int(i/n*100))
 
 
 class FindReplaceDialog(QDialog):
