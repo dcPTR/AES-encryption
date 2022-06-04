@@ -10,7 +10,6 @@ class MsgType(Enum):
 
 
 class Package:
-    ID = ""#"|.|"
     CMD_BYTES = 16
     PARAM_BYTES = 64
 
@@ -21,17 +20,20 @@ class Package:
 
     def get_request(self):
         cmd_bytes = bytearray(str(self.cmd.value).encode())
-        
         while len(cmd_bytes) < Package.CMD_BYTES:
             cmd_bytes = bytearray('0'.encode()) + cmd_bytes
+
         param_bytes = bytearray(str(self.param).encode())
         while len(param_bytes) < Package.PARAM_BYTES:
             param_bytes = bytearray('0'.encode()) + param_bytes
             
+        while len(self.msg) < TCPHandler.MAX_BUF:
+            self.msg = bytearray('0'.encode()) + self.msg
+            
         return cmd_bytes + param_bytes + self.msg
 
 class TCPHandler():
-    MAX_BUF = 4096 * 2
+    MAX_BUF = 64512#4096 * 8
 
     def __init__(self, serverPort, clientPort):
         self.ServerPort = serverPort
@@ -63,13 +65,16 @@ class TCPHandler():
             except:
                 continue
             
-            c.settimeout(5)
+            c.settimeout(10)
+            prevData = ""
             while self.Listening:
                 try:
-                    data = c.recv(TCPHandler.MAX_BUF + Package.CMD_BYTES + Package.PARAM_BYTES)
+                    data = c.recv(TCPHandler.MAX_BUF + Package.CMD_BYTES + Package.PARAM_BYTES, socket.MSG_WAITALL)
                 except Exception as e:
+                    print(f"exc {e}")
                     continue
-
+                
+                print(f"recv {data[0:Package.CMD_BYTES]} {data[Package.CMD_BYTES:Package.CMD_BYTES + Package.PARAM_BYTES]} {len(data)}")
                 cmd_b = data[0:Package.CMD_BYTES]
                 cmd = cmd_b.decode()
                 param = data[Package.CMD_BYTES:Package.CMD_BYTES + Package.PARAM_BYTES].decode()
@@ -91,13 +96,18 @@ class TCPHandler():
 
     def get_message_parts(self, msg):
         parts = []
-        while len(msg) > 0:
+        count = len(msg) / TCPHandler.MAX_BUF
+        if len(msg) % TCPHandler.MAX_BUF != 0:
+            count += 1
+
+        while len(parts) < count:
+            if (len(parts) % 100 == 0):
+                print(f"parts: {len(parts)} {count}")
             if len(msg) <= TCPHandler.MAX_BUF:
                 parts.append(msg)
                 break
             else:
-                parts.append(msg[0:TCPHandler.MAX_BUF])
-                msg = msg[TCPHandler.MAX_BUF:]
+                parts.append(msg[len(parts) * TCPHandler.MAX_BUF:len(parts) * TCPHandler.MAX_BUF + TCPHandler.MAX_BUF])
 
         return parts
 
