@@ -43,15 +43,15 @@ class Window(QMainWindow, Ui_MainWindow):
         self.cipherText.setStyleSheet("background-color:white")
         if self.cipherText.toPlainText() != "":
             self.statusbar.showMessage("Ciphering...")
-           # try:
+            # try:
             c = self.cipher.encrypt_text(self.cipherText.toPlainText())
             self.cipherResults.setPlainText(c)
             if self.tcp is not None and self.tcp.is_connected():
                 self.tcp.send_message(c.encode())
             self.statusbar.showMessage("Ciphering done")
-            #except Exception as e:
-             #   print(e)
-              #  self.statusbar.showMessage("Ciphering failed")
+            # except Exception as e:
+            #   print(e)
+            #  self.statusbar.showMessage("Ciphering failed")
         else:
             chosen_file = self.selectFile()
             print(chosen_file)
@@ -62,8 +62,8 @@ class Window(QMainWindow, Ui_MainWindow):
                     self.cipher.encrypt_file(chosen_file, result_file_name, self)
                     if self.tcp is not None and self.tcp.is_connected():
                         print("Sending file")
-                        f = open(result_file_name,'rb')
-                        self.tcp.send_message(f.read(), os.path.basename(result_file_name+".sent"), self)
+                        f = open(result_file_name, 'rb')
+                        self.tcp.send_message(f.read(), os.path.basename(result_file_name + ".sent"), self)
                     self.statusbar.showMessage("Ciphering done")
                 except Exception as e:
                     print(e)
@@ -156,7 +156,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.disconnectButton.setEnabled(True)
         self.recvThread = Thread(target=self.handleReceiving)
         self.recvThread.start()
-        
 
     def disconnectClicked(self):
         if not self.tcp.disconnect():
@@ -190,7 +189,6 @@ class Window(QMainWindow, Ui_MainWindow):
                 with open(filename, 'wb') as f:
                     f.write(msg)
 
-
     def updateCipherResult(self, text):
         self.cipherResults.setPlainText(text)
 
@@ -198,7 +196,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.cipherText.setStyleSheet("background-color:lightgreen")
 
     def update_progress(self, i, n):
-        self.progressBar.setValue(int(i/n*100))
+        self.progressBar.setValue(int(i / n * 100))
 
 
 class FindReplaceDialog(QDialog):
@@ -206,6 +204,7 @@ class FindReplaceDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         loadUi("main.ui", self)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

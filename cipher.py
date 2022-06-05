@@ -4,6 +4,10 @@ import struct
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import base64
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Hash import SHA256
+from Crypto.Signature import PKCS1_v1_5
 
 class Cipher:
     def __init__(self):
@@ -17,6 +21,7 @@ class Cipher:
         # chunk_size equal to to 1 MB (2**20) as a power of 2
         self.chunk_size = 2**20
         self.set_mode(self.mode)
+        self.generate_keys()
 
     def set_key(self, key):
         self.key = key
@@ -89,3 +94,15 @@ class Cipher:
                     f2.write(self.decryption_process(data))
                     obj.update_progress(f.tell(), filesize)
                 f2.truncate(originalsize)
+
+    def generate_keys(self):
+        key = RSA.generate(2048)
+        public_key = key.publickey()
+        private_key = key.exportKey()
+        # save the public key in a file
+        with open('keys/public_key.pem', 'wb') as f:
+            f.write(public_key.exportKey('PEM'))
+        # save the private key in a file
+        with open('keys/private_key.pem', 'wb') as f:
+            f.write(private_key)
+

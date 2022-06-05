@@ -2,12 +2,13 @@
 import socket, sys
 from enum import Enum
 from time import sleep
-
+import os
 
 class MsgType(Enum):
     MSG = 1
     ACK = 2
     NUM = 3
+    PUB = 4
 
 
 class Package:
@@ -118,7 +119,7 @@ class TCPHandler():
             pack = Package(MsgType.MSG, i, p)
             self.send_package(pack)
             if gui is not None:
-                gui.update_progress(i, n-1)
+                gui.update_progress(i, n - 1)
 
     def send_package(self, package):
         self.Client.send(package.get_request())
@@ -186,3 +187,10 @@ class TCPHandler():
         for i in range(len(indexes) + 1):
             self.Received.pop(0)
         return msg
+
+    # read public key from file and exchange it with server
+    def exchange_public_key(self):
+        with open("keys/public_key.pem", "rb") as f:
+            public_key = f.read()
+        pck = Package(MsgType.PUB, msg=bytearray(public_key))
+        self.send_package(pck)
