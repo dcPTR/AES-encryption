@@ -33,6 +33,7 @@ class Cipher:
                 public_key = RSA.importKey(f.read())
                 cipher = PKCS1_OAEP.new(public_key)
                 self.encryped_key = cipher.encrypt(self.key)
+                print(f"Key encrypted. Length of the key: {len(self.encryped_key)}")
         except:
             print("Error: public key of the receiver not found")
 
@@ -113,7 +114,7 @@ class Cipher:
         with open(source_file, 'rb') as f:
             with open(dest_file, 'wb') as f2:
                 originalsize = struct.unpack('<Q', f.read(struct.calcsize('Q')))[0]
-                self.set_encryped_key(f.read(16))
+                self.set_encryped_key(f.read(256))
                 self.set_iv(f.read(16))
                 while True:
                     data = f.read(self.chunk_size)
