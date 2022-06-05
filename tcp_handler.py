@@ -168,7 +168,7 @@ class TCPHandler():
         if self.Received[0].cmd == MsgType.PUB:
             pub_rec = self.Received[0].msg.decode()
             # store public key in a binary file
-            with open("keys/public_key_rec.pem", "w") as f:
+            with open("keys/public/public_key_rec.pem", "w") as f:
                 f.write(pub_rec)
             self.Received.pop(0)
             return True
@@ -203,7 +203,7 @@ class TCPHandler():
 
     # read public key from file and exchange it with server
     def exchange_public_key(self):
-        with open("keys/public_key.pem", "rb") as f:
+        with open("keys/public/public_key.pem", "rb") as f:
             public_key = f.read()
         pck = Package(MsgType.PUB, msg=bytearray(public_key))
         self.send_package(pck)

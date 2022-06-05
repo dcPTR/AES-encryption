@@ -21,7 +21,15 @@ class Cipher:
         # chunk_size equal to to 1 MB (2**20) as a power of 2
         self.chunk_size = 2**20
         self.set_mode(self.mode)
+        self.encryped_key = None
         self.generate_keys()
+
+    def set_encryped_key(self, encryped_key):
+        self.encryped_key = encryped_key
+        # decrypt key using the private key
+        with open('keys/private/private_key.pem', 'rb') as f:
+            private_key = RSA.importKey(f.read())
+            self.key = PKCS1_OAEP.new(private_key).decrypt(self.encryped_key)
 
     def set_key(self, key):
         self.key = key
@@ -52,6 +60,7 @@ class Cipher:
         return self.aes.encrypt(plaintext)
 
     def encrypt_text(self, plaintext):
+        self.generate_keys()
         ciphertext = self.encryption_process(plaintext.encode('utf-8'))
         return base64.b64encode(ciphertext).decode('utf-8')
 
@@ -69,10 +78,13 @@ class Cipher:
         return plaintext.decode('utf-8').rstrip(' ')
 
     def encrypt_file(self, source_file, dest_file, obj):
+        self.generate_keys()
         filesize = os.path.getsize(source_file)
         with open(source_file, 'rb') as f:
             with open(dest_file, 'wb') as f2:
+                # write the key in the file
                 f2.write(struct.pack('<Q', filesize))
+                f2.write(self.encryped_key)
                 f2.write(self.iv)
                 while True:
                     data = f.read(self.chunk_size)
@@ -86,6 +98,7 @@ class Cipher:
         with open(source_file, 'rb') as f:
             with open(dest_file, 'wb') as f2:
                 originalsize = struct.unpack('<Q', f.read(struct.calcsize('Q')))[0]
+                self.set_encryped_key(f.read(16))
                 self.set_iv(f.read(16))
                 while True:
                     data = f.read(self.chunk_size)
@@ -100,9 +113,9 @@ class Cipher:
         public_key = key.publickey()
         private_key = key.exportKey()
         # save the public key in a file
-        with open('keys/public_key.pem', 'wb') as f:
+        with open('keys/public/public_key.pem', 'wb') as f:
             f.write(public_key.exportKey('PEM'))
         # save the private key in a file
-        with open('keys/private_key.pem', 'wb') as f:
+        with open('keys/private/private_key.pem', 'wb') as f:
             f.write(private_key)
 
