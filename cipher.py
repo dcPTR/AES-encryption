@@ -87,5 +87,5 @@ class Cipher:
                     if not data:
                         break
                     f2.write(self.decryption_process(data))
-                    obj.progressBar.setValue(int(f.tell()/filesize*100))
+                    obj.update_progress(f.tell(), filesize)
                 f2.truncate(originalsize)
