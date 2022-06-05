@@ -28,13 +28,10 @@ class Package:
         while len(param_bytes) < Package.PARAM_BYTES:
             param_bytes = bytearray('0'.encode()) + param_bytes
             
-        while len(self.msg) < TCPHandler.MAX_BUF:
-            self.msg = bytearray('0'.encode()) + self.msg
-            
         return cmd_bytes + param_bytes + self.msg
 
 class TCPHandler():
-    MAX_BUF = 64512#4096 * 8
+    MAX_BUF = 64512
 
     def __init__(self, serverPort, clientPort):
         self.ServerPort = serverPort
@@ -70,9 +67,8 @@ class TCPHandler():
             prevData = ""
             while self.Listening:
                 try:
-                    data = c.recv(TCPHandler.MAX_BUF + Package.CMD_BYTES + Package.PARAM_BYTES, socket.MSG_WAITALL)
+                    data = c.recv(TCPHandler.MAX_BUF + Package.CMD_BYTES + Package.PARAM_BYTES)
                 except Exception as e:
-                    print(f"exc {e}")
                     continue
                 
                 print(f"recv {data[0:Package.CMD_BYTES]} {data[Package.CMD_BYTES:Package.CMD_BYTES + Package.PARAM_BYTES]} {len(data)}")
@@ -102,8 +98,6 @@ class TCPHandler():
             count += 1
 
         while len(parts) < count:
-            if (len(parts) % 100 == 0):
-                print(f"parts: {len(parts)} {count}")
             if len(msg) <= TCPHandler.MAX_BUF:
                 parts.append(msg)
                 break
