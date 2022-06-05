@@ -1,6 +1,7 @@
 # from logging.config import stopListening
 import socket, sys
 from enum import Enum
+from time import sleep
 
 
 class MsgType(Enum):
@@ -65,7 +66,7 @@ class TCPHandler():
             except:
                 continue
             
-            c.settimeout(10)
+            c.settimeout(5)
             prevData = ""
             while self.Listening:
                 try:
@@ -118,6 +119,7 @@ class TCPHandler():
         self.send_package(numPack)
         i = 0
         for p in parts:
+            sleep(0.01)
             pack = Package(MsgType.MSG, i, p)
             self.send_package(pack)
             i += 1
