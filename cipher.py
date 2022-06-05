@@ -23,6 +23,18 @@ class Cipher:
         self.set_mode(self.mode)
         self.encryped_key = None
         self.generate_keys()
+        self.public_rec_key = None
+
+    def encrypt_key(self):
+        # encrypt the key using the public key
+        try:
+            print("Encrypting key...")
+            with open('keys/public/public_key_rec.pem', 'rb') as f:
+                public_key = RSA.importKey(f.read())
+                cipher = PKCS1_OAEP.new(public_key)
+                self.encryped_key = cipher.encrypt(self.key)
+        except:
+            print("Error: public key of the receiver not found")
 
     def set_encryped_key(self, encryped_key):
         self.encryped_key = encryped_key
@@ -60,6 +72,7 @@ class Cipher:
         return self.aes.encrypt(plaintext)
 
     def encrypt_text(self, plaintext):
+        self.encrypt_key()
         self.generate_keys()
         ciphertext = self.encryption_process(plaintext.encode('utf-8'))
         return base64.b64encode(ciphertext).decode('utf-8')
@@ -78,7 +91,9 @@ class Cipher:
         return plaintext.decode('utf-8').rstrip(' ')
 
     def encrypt_file(self, source_file, dest_file, obj):
-        self.generate_keys()
+        # self.generate_keys()
+        self.encrypt_key()
+        print("Encrypting file...")
         filesize = os.path.getsize(source_file)
         with open(source_file, 'rb') as f:
             with open(dest_file, 'wb') as f2:
@@ -109,13 +124,15 @@ class Cipher:
                 f2.truncate(originalsize)
 
     def generate_keys(self):
+        print("Generating keys...")
         key = RSA.generate(2048)
         public_key = key.publickey()
         private_key = key.exportKey()
+        print("Saving keys...")
         # save the public key in a file
         with open('keys/public/public_key.pem', 'wb') as f:
             f.write(public_key.exportKey('PEM'))
         # save the private key in a file
         with open('keys/private/private_key.pem', 'wb') as f:
             f.write(private_key)
-
+        print("Keys generated")

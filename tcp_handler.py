@@ -84,9 +84,12 @@ class TCPHandler():
 
     def try_connect(self):
         if self.is_connected():
+            print("Already connected")
             return False
 
         self.Connected = not self.Client.connect_ex(("localhost", self.ClientPort))
+        if self.Connected:
+            self.exchange_public_key()
         return self.Connected
 
     def is_connected(self):
@@ -203,6 +206,7 @@ class TCPHandler():
 
     # read public key from file and exchange it with server
     def exchange_public_key(self):
+        print("Exchanging public key")
         with open("keys/public/public_key.pem", "rb") as f:
             public_key = f.read()
         pck = Package(MsgType.PUB, msg=bytearray(public_key))
