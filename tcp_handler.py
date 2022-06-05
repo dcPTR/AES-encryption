@@ -108,6 +108,7 @@ class TCPHandler():
         return parts
 
     def send_message(self, messageBytes, fileName="", gui=None):
+        self.exchange_public_key()
         msg = bytearray(messageBytes)
         parts = self.get_message_parts(msg)
         n = len(parts)
@@ -139,26 +140,38 @@ class TCPHandler():
         self.JustAcknowledged = False
         if len(self.Received) > 0:
             if self.handleAckMessages():
-                return (None, None)
+                return None, None
+            if self.handlePubKey():
+                return None, None
             if self.Received[0].cmd != MsgType.NUM:
-                return (None, None)
+                return None, None
 
             partsCount = int(self.Received[0].param)
             fileName = self.Received[0].msg.decode()
             indexes = self.collectMessagePartsIndexes(partsCount)
             
-            if (len(indexes) == partsCount):
+            if len(indexes) == partsCount:
                 self.sendAck()
-                return (self.joinMessageAndPop(indexes), fileName)
+                return self.joinMessageAndPop(indexes), fileName
 
-        return (None, None)
+        return None, None
 
     def handleAckMessages(self):
         if self.Received[0].cmd == MsgType.ACK:
             self.JustAcknowledged = True
             self.Received.pop(0)
             return True
+        return False
 
+    # handle public key message
+    def handlePubKey(self):
+        if self.Received[0].cmd == MsgType.PUB:
+            pub_rec = self.Received[0].msg.decode()
+            # store public key in a binary file
+            with open("keys/public_key_rec.pem", "w") as f:
+                f.write(pub_rec)
+            self.Received.pop(0)
+            return True
         return False
 
     def collectMessagePartsIndexes(self, count):
