@@ -73,8 +73,11 @@ class Cipher:
         return self.aes.encrypt(plaintext)
 
     def encrypt_text(self, plaintext):
-        self.encrypt_key()
-        self.generate_keys()
+        self.generate_keys() # regenerate the keys - new session
+        try:
+            self.encrypt_key()
+        except:
+            print("Error: public key of the receiver not found")
         ciphertext = self.encryption_process(plaintext.encode('utf-8'))
         return base64.b64encode(ciphertext).decode('utf-8')
 
@@ -93,14 +96,19 @@ class Cipher:
 
     def encrypt_file(self, source_file, dest_file, obj):
         # self.generate_keys()
-        self.encrypt_key()
+        try:
+            self.encrypt_key()
+        except:
+            print("Error: public key of the receiver not found")
+
         print("Encrypting file...")
         filesize = os.path.getsize(source_file)
         with open(source_file, 'rb') as f:
             with open(dest_file, 'wb') as f2:
                 # write the key in the file
                 f2.write(struct.pack('<Q', filesize))
-                f2.write(self.encryped_key)
+                if self.encryped_key is not None:
+                    f2.write(self.encryped_key)
                 f2.write(self.iv)
                 while True:
                     data = f.read(self.chunk_size)
@@ -114,7 +122,8 @@ class Cipher:
         with open(source_file, 'rb') as f:
             with open(dest_file, 'wb') as f2:
                 originalsize = struct.unpack('<Q', f.read(struct.calcsize('Q')))[0]
-                self.set_encryped_key(f.read(256))
+                if self.encryped_key is not None:
+                    self.set_encryped_key(f.read(256))
                 self.set_iv(f.read(16))
                 while True:
                     data = f.read(self.chunk_size)
