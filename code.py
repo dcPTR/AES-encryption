@@ -45,10 +45,12 @@ class Window(QMainWindow, Ui_MainWindow):
             self.statusbar.showMessage("Ciphering...")
             # try:
             c = self.cipher.encrypt_text(self.cipherText.toPlainText())
+            self.statusbar.showMessage("Ciphering done")
             self.cipherResults.setPlainText(c)
             if self.tcp is not None and self.tcp.is_connected():
                 self.tcp.send_message(c.encode())
-            self.statusbar.showMessage("Ciphering done")
+                self.statusbar.showMessage("Sent encrypted message")
+
             # except Exception as e:
             #   print(e)
             #  self.statusbar.showMessage("Ciphering failed")
@@ -60,11 +62,13 @@ class Window(QMainWindow, Ui_MainWindow):
                 try:
                     result_file_name = chosen_file + ".cipher"
                     self.cipher.encrypt_file(chosen_file, result_file_name, self)
+                    self.statusbar.showMessage("Ciphering done")
                     if self.tcp is not None and self.tcp.is_connected():
                         print("Sending file")
+                        self.statusbar.showMessage("Sending file")
                         f = open(result_file_name, 'rb')
                         self.tcp.send_message(f.read(), os.path.basename(result_file_name + ".sent"), self)
-                    self.statusbar.showMessage("Ciphering done")
+                        self.statusbar.showMessage("Cipher message sent")
                 except Exception as e:
                     print(e)
                     self.statusbar.showMessage("Ciphering failed")
@@ -78,8 +82,8 @@ class Window(QMainWindow, Ui_MainWindow):
             try:
                 c = self.cipher.decrypt_text(self.cipherText.toPlainText())
                 self.cipherResults.setPlainText(c)
-                if self.tcp is not None and self.tcp.is_connected():
-                    self.tcp.send_message(c)
+                # if self.tcp is not None and self.tcp.is_connected():
+                #     self.tcp.send_message(c)
                 self.statusbar.showMessage("Deciphering done")
             except Exception as e:
                 print(e)
@@ -91,21 +95,18 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.statusbar.showMessage("Deciphering...")
                 try:
                     if chosen_file.endswith(".cipher"):
-                        result_file_name = chosen_file.replace(".cipher", ".decipher")
-                        # check if file has 2 extensions
-                        # if yes find the first extension and save it the variable ext
-                        if chosen_file.count(".") > 1:
-                            ext = chosen_file.split(".")[-2]
-                            result_file_name = result_file_name + "." + ext
+                        result_file_name = chosen_file.replace(".cipher", "")
+                    elif chosen_file.endswith(".cipher.sent"):
+                        result_file_name = chosen_file.replace(".cipher.sent", "")
                     else:
-                        result_file_name = chosen_file + ".decipher"
+                        result_file_name = chosen_file
 
                     self.cipher.decrypt_file(chosen_file, result_file_name, self)
-                    if self.tcp is not None and self.tcp.is_connected():
-                        f = open(result_file_name, 'rb')
-                        self.tcp.send_message(f.read(), os.path.basename(result_file_name))
-
                     self.statusbar.showMessage("Deciphering done")
+                    # if self.tcp is not None and self.tcp.is_connected():
+                    #     f = open(result_file_name, 'rb')
+                    #     self.tcp.send_message(f.read(), os.path.basename(result_file_name))
+
                 except Exception as e:
                     print(e)
                     self.statusbar.showMessage("Deciphering failed")
