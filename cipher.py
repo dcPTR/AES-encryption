@@ -106,7 +106,8 @@ class Cipher:
             with open(dest_file, 'wb') as f2:
                 # write the key in the file
                 f2.write(struct.pack('<Q', filesize))
-                f2.write(self.encryped_key)
+                if not obj.connectButton.isEnabled():
+                    f2.write(self.encryped_key)
                 f2.write(self.iv)
                 while True:
                     data = f.read(self.chunk_size)
@@ -120,7 +121,8 @@ class Cipher:
         with open(source_file, 'rb') as f:
             with open(dest_file, 'wb') as f2:
                 originalsize = struct.unpack('<Q', f.read(struct.calcsize('Q')))[0]
-                self.set_decrypted_key(f.read(256))
+                if not obj.connectButton.isEnabled():
+                    self.set_decrypted_key(f.read(256))
                 self.set_iv(f.read(16))
                 while True:
                     data = f.read(self.chunk_size)
