@@ -9,7 +9,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA256
 from Crypto.Signature import PKCS1_v1_5
-from Crypto.Util.Padding import pad
+from Crypto.Util.Padding import pad, unpad
 
 
 class Cipher:
@@ -22,12 +22,14 @@ class Cipher:
         self.key_size = None
         self.aes = None
         # chunk_size equal to to 1 MB (2**20) as a power of 2
-        self.chunk_size = 2**20
+        self.chunk_size = 2 ** 20
         self.set_mode(self.mode)
-        self.encryped_key = None
-        self.generate_keys()
-        self.public_rec_key = None
         self.my_local_key = "abcde"
+        self.encryped_key = None
+        self.public_rec_key = None
+        self.generate_keys()
+
+
 
     def encrypt_key(self):
         # encrypt the key using the public key
@@ -118,7 +120,7 @@ class Cipher:
                     if not data:
                         break
                     f2.write(self.encryption_process(data))
-                    gui.progressBar.setValue(int(f.tell()/filesize*100))
+                    gui.progressBar.setValue(int(f.tell() / filesize * 100))
 
     def decrypt_file(self, source_file, dest_file, gui):
         filesize = os.path.getsize(source_file)
@@ -139,19 +141,19 @@ class Cipher:
 
     def encrypt_private_key(self, private_key):
         # encrypt the private key using aes in cbc mode
-        # the key is the SHA256 of the self.local_key
+        # the key is the SHA1 of the self.local_key
         key_sha = hashlib.sha1(self.my_local_key.encode('utf-8')).digest()
         key_sha = pad(key_sha, AES.block_size)
         local_aes = AES.new(key_sha, AES.MODE_CBC, self.iv)
-        return local_aes.encrypt(private_key)
+        return local_aes.encrypt(pad(private_key, AES.block_size))
 
     def decrypt_private_key(self, private_key):
         # decrypt the private key using aes in cbc mode
-        # the key is the SHA256 of the self.local_key
-        key_sha = hashlib.sha256(self.my_local_key.encode('utf-8')).digest()
+        # the key is the SHA1 of the self.local_key
+        key_sha = hashlib.sha1(self.my_local_key.encode('utf-8')).digest()
         key_sha = pad(key_sha, AES.block_size)
         local_aes = AES.new(key_sha, AES.MODE_CBC, self.iv)
-        return local_aes.decrypt(private_key)
+        return unpad(local_aes.decrypt(private_key), AES.block_size)
 
     def generate_keys(self):
         print("Generating keys...")
