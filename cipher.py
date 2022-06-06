@@ -25,6 +25,7 @@ class Cipher:
         self.generate_keys()
         self.public_rec_key = None
 
+
     def encrypt_key(self):
         # encrypt the key using the public key
         try:
@@ -46,12 +47,16 @@ class Cipher:
     def set_key(self, key):
         self.key = key
 
-    def set_mode(self, mode):
+    def set_mode(self, mode, gui=None):
         self.mode = mode
         if self.mode == "CBC":
             self.aes = AES.new(self.key, AES.MODE_CBC, self.iv)
+            if gui is not None:
+                gui.cipherModeCBC.click()
         else:
             self.aes = AES.new(self.key, AES.MODE_ECB)
+            if gui is not None:
+                gui.cipherModeECB.click()
 
     def set_cipher(self, cipher):
         self.cipher = cipher
@@ -93,7 +98,7 @@ class Cipher:
         plaintext = self.decryption_process(ciphertext)
         return plaintext.decode('utf-8').rstrip(' ')
 
-    def encrypt_file(self, source_file, dest_file, obj):
+    def encrypt_file(self, source_file, dest_file, gui):
         # self.generate_keys()
         try:
             self.encrypt_key()
@@ -106,30 +111,32 @@ class Cipher:
             with open(dest_file, 'wb') as f2:
                 # write the key in the file
                 f2.write(struct.pack('<Q', filesize))
-                if not obj.connectButton.isEnabled():
+                if not gui.connectButton.isEnabled():
                     f2.write(self.encryped_key)
                 f2.write(self.iv)
+                f2.write(self.mode.encode('utf-8'))
                 while True:
                     data = f.read(self.chunk_size)
                     if not data:
                         break
                     f2.write(self.encryption_process(data))
-                    obj.progressBar.setValue(int(f.tell()/filesize*100))
+                    gui.progressBar.setValue(int(f.tell()/filesize*100))
 
-    def decrypt_file(self, source_file, dest_file, obj):
+    def decrypt_file(self, source_file, dest_file, gui):
         filesize = os.path.getsize(source_file)
         with open(source_file, 'rb') as f:
             with open(dest_file, 'wb') as f2:
                 originalsize = struct.unpack('<Q', f.read(struct.calcsize('Q')))[0]
-                if not obj.connectButton.isEnabled():
+                if not gui.connectButton.isEnabled():
                     self.set_decrypted_key(f.read(256))
                 self.set_iv(f.read(16))
+                self.set_mode(f.read(3).decode('utf-8'), gui=gui)
                 while True:
                     data = f.read(self.chunk_size)
                     if not data:
                         break
                     f2.write(self.decryption_process(data))
-                    obj.update_progress(f.tell(), filesize)
+                    gui.update_progress(f.tell(), filesize)
                 f2.truncate(originalsize)
 
     def generate_keys(self):
