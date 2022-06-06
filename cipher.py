@@ -1,3 +1,4 @@
+import hashlib
 import os
 import struct
 
@@ -8,6 +9,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA256
 from Crypto.Signature import PKCS1_v1_5
+from Crypto.Util.Padding import pad
+
 
 class Cipher:
     def __init__(self):
@@ -24,7 +27,7 @@ class Cipher:
         self.encryped_key = None
         self.generate_keys()
         self.public_rec_key = None
-
+        self.my_local_key = "abcde"
 
     def encrypt_key(self):
         # encrypt the key using the public key
@@ -41,7 +44,8 @@ class Cipher:
     def set_decrypted_key(self, encryped_key):
         # decrypt key using the private key
         with open('keys/private/private_key.pem', 'rb') as f:
-            private_key = RSA.importKey(f.read())
+            private_key_encrypted = f.read()
+            private_key = RSA.importKey(self.decrypt_private_key(private_key_encrypted))
             self.key = PKCS1_OAEP.new(private_key).decrypt(encryped_key)
 
     def set_key(self, key):
@@ -64,12 +68,6 @@ class Cipher:
     def set_iv(self, iv):
         self.iv = iv
         self.set_mode(self.mode)
-
-    def encrypt(self):
-        # encrypt the file in AES
-        # use the encrypt_file function
-        # return the ciphertext
-        pass
 
     def encryption_process(self, plaintext):
         if len(plaintext) % 16 != 0:
@@ -139,6 +137,22 @@ class Cipher:
                     gui.update_progress(f.tell(), filesize)
                 f2.truncate(originalsize)
 
+    def encrypt_private_key(self, private_key):
+        # encrypt the private key using aes in cbc mode
+        # the key is the SHA256 of the self.local_key
+        key_sha = hashlib.sha1(self.my_local_key.encode('utf-8')).digest()
+        key_sha = pad(key_sha, AES.block_size)
+        local_aes = AES.new(key_sha, AES.MODE_CBC, self.iv)
+        return local_aes.encrypt(private_key)
+
+    def decrypt_private_key(self, private_key):
+        # decrypt the private key using aes in cbc mode
+        # the key is the SHA256 of the self.local_key
+        key_sha = hashlib.sha256(self.my_local_key.encode('utf-8')).digest()
+        key_sha = pad(key_sha, AES.block_size)
+        local_aes = AES.new(key_sha, AES.MODE_CBC, self.iv)
+        return local_aes.decrypt(private_key)
+
     def generate_keys(self):
         print("Generating keys...")
         key = RSA.generate(2048)
@@ -150,5 +164,6 @@ class Cipher:
             f.write(public_key.exportKey('PEM'))
         # save the private key in a file
         with open('keys/private/private_key.pem', 'wb') as f:
+            private_key = self.encrypt_private_key(private_key)
             f.write(private_key)
         print("Keys generated")
