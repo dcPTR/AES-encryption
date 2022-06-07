@@ -29,7 +29,9 @@ class Cipher:
         self.public_rec_key = None
         self.generate_keys()
 
-
+    def set_local_key(self, local_key):
+        self.my_local_key = local_key
+        self.generate_keys()
 
     def encrypt_key(self):
         # encrypt the key using the public key
@@ -157,6 +159,7 @@ class Cipher:
 
     def generate_keys(self):
         print("Generating keys...")
+        print("Local key: " + self.my_local_key)
         key = RSA.generate(2048)
         public_key = key.publickey()
         private_key = key.exportKey()

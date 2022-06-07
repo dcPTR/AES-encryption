@@ -32,7 +32,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.disconnectButton.clicked.connect(self.disconnectClicked)
         self.cipherModeCBC.clicked.connect(self.cipherModeCBCClicked)
         self.cipherModeECB.clicked.connect(self.cipherModeECBClicked)
-        self.cipherModeECB
+        self.localKeyEdit.textChanged.connect(self.localKeyChanged)
+
+    def localKeyChanged(self):
+        self.cipher.set_local_key(self.localKeyEdit.text())
 
     def cipherModeCBCClicked(self):
         self.cipher.set_mode("CBC")

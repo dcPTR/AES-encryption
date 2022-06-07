@@ -14,7 +14,7 @@
    <string>Aplikacja szyfrująca</string>
   </property>
   <property name="styleSheet">
-   <string notr="true"/>
+   <string notr="true">background-color: white;</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="cipherButton">
@@ -126,13 +126,16 @@
     <property name="geometry">
      <rect>
       <x>290</x>
-      <y>100</y>
-      <width>100</width>
-      <height>30</height>
+      <y>89</y>
+      <width>111</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="cursor">
      <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius: 10px; border: 3px solid #fff; color: #000; background-color: #2ecc71;</string>
     </property>
     <property name="text">
      <string>Uruchom serwer</string>
@@ -152,6 +155,9 @@
     </property>
     <property name="cursor">
      <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
     <property name="text">
      <string>Połącz</string>
@@ -188,6 +194,9 @@
     <property name="toolTip">
      <string>Server port</string>
     </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: lightgreen</string>
+    </property>
     <property name="minimum">
      <number>1024</number>
     </property>
@@ -209,6 +218,9 @@
     </property>
     <property name="toolTip">
      <string>Client port</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: lightgreen;</string>
     </property>
     <property name="minimum">
      <number>1024</number>
@@ -267,28 +279,31 @@
      <bool>true</bool>
     </property>
    </widget>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>800</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>File</string>
+   <widget class="QLineEdit" name="localKeyEdit">
+    <property name="geometry">
+     <rect>
+      <x>600</x>
+      <y>510</y>
+      <width>161</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>Podaj klucz, którym zaszyfrujesz klucz prywatny.</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="echoMode">
+     <enum>QLineEdit::Password</enum>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+    <property name="placeholderText">
+     <string>KLUCZ LOKALNY</string>
     </property>
    </widget>
-   <widget class="QMenu" name="menuLoad">
-    <property name="title">
-     <string>Load</string>
-    </property>
-   </widget>
-   <addaction name="menuFile"/>
-   <addaction name="menuLoad"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
