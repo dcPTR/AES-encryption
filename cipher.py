@@ -10,6 +10,7 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA256
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Util.Padding import pad, unpad
+from KeyProvider import KeyProvider
 
 
 class Cipher:
@@ -24,33 +25,36 @@ class Cipher:
         # chunk_size equal to to 1 MB (2**20) as a power of 2
         self.chunk_size = 2 ** 20
         self.set_mode(self.mode)
-        self.my_local_key = "abcde"
         self.encryped_key = None
         self.public_rec_key = None
-        self.generate_keys()
+        self.provider = None
+        with open("local.key") as f:
+            self.my_local_key = f.read()
+        self.initialize_key_provider()
 
-    def set_local_key(self, local_key):
-        self.my_local_key = local_key
-        self.generate_keys()
+    def initialize_key_provider(self):
+        self.provider = KeyProvider()
+        self.provider.add_many_key_pairs(2)
+
 
     def encrypt_key(self):
         # encrypt the key using the public key
         try:
             print("Encrypting key...")
-            with open('keys/public/public_key_rec.pem', 'rb') as f:
-                public_key = RSA.importKey(f.read())
-                cipher = PKCS1_OAEP.new(public_key)
-                self.encryped_key = cipher.encrypt(self.key)
-                print(f"Key encrypted. Length of the key: {len(self.encryped_key)}")
+            priv, publ = self.provider.get_key_pair()
+            public_key = RSA.importKey(publ)
+            cipher = PKCS1_OAEP.new(public_key)
+            self.encryped_key = cipher.encrypt(self.key)
+            print(f"Key encrypted. Length of the key: {len(self.encryped_key)}")
         except:
             print("Error: public key of the receiver not found")
 
     def set_decrypted_key(self, encryped_key):
         # decrypt key using the private key
-        with open('keys/private/private_key.pem', 'rb') as f:
-            private_key_encrypted = f.read()
-            private_key = RSA.importKey(self.decrypt_private_key(private_key_encrypted))
-            self.key = PKCS1_OAEP.new(private_key).decrypt(encryped_key)
+        #with open('keys/private/private_key.pem', 'rb') as f:
+        priv, publ = self.provider.get_key_pair()
+        private_key = RSA.importKey(self.decrypt_private_key(priv))
+        self.key = PKCS1_OAEP.new(private_key).decrypt(encryped_key)
 
     def set_key(self, key):
         self.key = key
@@ -80,6 +84,7 @@ class Cipher:
 
     def encrypt_text(self, plaintext):
         # self.generate_keys() # regenerate the keys - new session
+        self.provider.next_key_pair()
         try:
             self.encrypt_key()
         except:
@@ -101,7 +106,7 @@ class Cipher:
         return plaintext.decode('utf-8').rstrip(' ')
 
     def encrypt_file(self, source_file, dest_file, gui):
-        # self.generate_keys()
+        self.provider.next_key_pair()
         try:
             self.encrypt_key()
         except:
@@ -144,7 +149,7 @@ class Cipher:
     def encrypt_private_key(self, private_key):
         # encrypt the private key using aes in cbc mode
         # the key is the SHA1 of the self.local_key
-        key_sha = hashlib.sha1(self.my_local_key.encode('utf-8')).digest()
+        key_sha = hashlib.sha1(KeyProvider.my_local_key.encode('utf-8')).digest()
         key_sha = pad(key_sha, AES.block_size)
         local_aes = AES.new(key_sha, AES.MODE_CBC, self.iv)
         return local_aes.encrypt(pad(private_key, AES.block_size))
@@ -152,23 +157,7 @@ class Cipher:
     def decrypt_private_key(self, private_key):
         # decrypt the private key using aes in cbc mode
         # the key is the SHA1 of the self.local_key
-        key_sha = hashlib.sha1(self.my_local_key.encode('utf-8')).digest()
+        key_sha = hashlib.sha1(KeyProvider.my_local_key.encode('utf-8')).digest()
         key_sha = pad(key_sha, AES.block_size)
         local_aes = AES.new(key_sha, AES.MODE_CBC, self.iv)
         return unpad(local_aes.decrypt(private_key), AES.block_size)
-
-    def generate_keys(self):
-        print("Generating keys...")
-        print("Local key: " + self.my_local_key)
-        key = RSA.generate(2048)
-        public_key = key.publickey()
-        private_key = key.exportKey()
-        print("Saving keys...")
-        # save the public key in a file
-        with open('keys/public/public_key.pem', 'wb') as f:
-            f.write(public_key.exportKey('PEM'))
-        # save the private key in a file
-        with open('keys/private/private_key.pem', 'wb') as f:
-            private_key = self.encrypt_private_key(private_key)
-            f.write(private_key)
-        print("Keys generated")

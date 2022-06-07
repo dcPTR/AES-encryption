@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import Mock
 import filecmp
+from KeyProvider import KeyProvider
 from cipher import Cipher
 from tcp_handler import TCPHandler
 
@@ -59,6 +60,20 @@ class TestStringMethods(unittest.TestCase):
         merged = "".join(parts)
         tcp.disconnect()
         self.assertEqual(merged, msg)
+
+    def test_generating_keys(self):
+        n = 5
+        key_provider = KeyProvider()
+        key_provider.add_many_key_pairs(n)
+        keys_not_empty = True
+        for i in range(n):
+            priv, publ = key_provider.get_key_pair()
+            key_provider.next_key_pair()
+            if len(priv) == 0 or len(publ) == 0:
+                keys_not_empty = False
+                break
+
+        self.assertTrue(keys_not_empty and key_provider.cur_key == n)
 
 
 if __name__ == '__main__':

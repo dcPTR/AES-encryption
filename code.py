@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QMessageBox, QFi
 from PyQt5 import QtCore
 from PyQt5 import uic
 from threading import Thread
+from KeyProvider import KeyProvider
 from cipher import Cipher
 from tcp_handler import TCPHandler
 from main import Ui_MainWindow
