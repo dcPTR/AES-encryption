@@ -51,7 +51,6 @@ class Cipher:
 
     def set_decrypted_key(self, encryped_key):
         # decrypt key using the private key
-        #with open('keys/private/private_key.pem', 'rb') as f:
         priv, publ = self.provider.get_key_pair()
         private_key = RSA.importKey(self.decrypt_private_key(priv))
         self.key = PKCS1_OAEP.new(private_key).decrypt(encryped_key)
@@ -83,7 +82,6 @@ class Cipher:
         return self.aes.encrypt(plaintext)
 
     def encrypt_text(self, plaintext):
-        # self.generate_keys() # regenerate the keys - new session
         self.provider.next_key_pair()
         try:
             self.encrypt_key()

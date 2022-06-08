@@ -48,17 +48,17 @@ class Window(QMainWindow, Ui_MainWindow):
         self.cipherText.setStyleSheet("background-color:white")
         if self.cipherText.toPlainText() != "":
             self.statusbar.showMessage("Ciphering...")
-            # try:
-            c = self.cipher.encrypt_text(self.cipherText.toPlainText())
-            self.statusbar.showMessage("Ciphering done")
-            self.cipherResults.setPlainText(c)
-            if self.tcp is not None and self.tcp.is_connected():
-                self.tcp.send_message(c.encode())
-                self.statusbar.showMessage("Sent encrypted message")
+            try:
+                c = self.cipher.encrypt_text(self.cipherText.toPlainText())
+                self.statusbar.showMessage("Ciphering done")
+                self.cipherResults.setPlainText(c)
+                if self.tcp is not None and self.tcp.is_connected():
+                    self.tcp.send_message(c.encode())
+                    self.statusbar.showMessage("Sent encrypted message")
 
-            # except Exception as e:
-            #   print(e)
-            #  self.statusbar.showMessage("Ciphering failed")
+            except Exception as e:
+               print(e)
+               self.statusbar.showMessage("Ciphering failed")
         else:
             chosen_file = self.selectFile()
             print(chosen_file)
@@ -75,7 +75,7 @@ class Window(QMainWindow, Ui_MainWindow):
                         self.tcp.send_message(f.read(), os.path.basename(result_file_name + ".sent"), self)
                         self.statusbar.showMessage("Cipher message sent")
                 except Exception as e:
-                    print(e)
+                    print(f"exception {e}")
                     self.statusbar.showMessage("Ciphering failed")
             else:
                 self.statusbar.showMessage("No file selected")

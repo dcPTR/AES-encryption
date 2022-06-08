@@ -65,7 +65,6 @@ class TCPHandler():
                 continue
             
             c.settimeout(5)
-            prevData = ""
             while self.Listening:
                 try:
                     data = c.recv(TCPHandler.MAX_BUF + Package.CMD_BYTES + Package.PARAM_BYTES)
@@ -127,6 +126,7 @@ class TCPHandler():
 
     def send_package(self, package):
         self.Client.send(package.get_request())
+        print(f"sending {package.get_request()}")
 
     def disconnect(self):
         if self.is_connected:
