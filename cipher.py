@@ -33,7 +33,7 @@ class Cipher:
         self.initialize_key_provider()
 
     def initialize_key_provider(self):
-        self.provider = KeyProvider()
+        self.provider = KeyProvider(self.my_local_key, self.iv)
         self.provider.add_many_key_pairs(2)
 
 
@@ -144,18 +144,10 @@ class Cipher:
                     gui.update_progress(f.tell(), filesize)
                 f2.truncate(originalsize)
 
-    def encrypt_private_key(self, private_key):
-        # encrypt the private key using aes in cbc mode
-        # the key is the SHA1 of the self.local_key
-        key_sha = hashlib.sha1(KeyProvider.my_local_key.encode('utf-8')).digest()
-        key_sha = pad(key_sha, AES.block_size)
-        local_aes = AES.new(key_sha, AES.MODE_CBC, self.iv)
-        return local_aes.encrypt(pad(private_key, AES.block_size))
-
     def decrypt_private_key(self, private_key):
         # decrypt the private key using aes in cbc mode
         # the key is the SHA1 of the self.local_key
-        key_sha = hashlib.sha1(KeyProvider.my_local_key.encode('utf-8')).digest()
+        key_sha = hashlib.sha1(self.my_local_key.encode('utf-8')).digest()
         key_sha = pad(key_sha, AES.block_size)
         local_aes = AES.new(key_sha, AES.MODE_CBC, self.iv)
         return unpad(local_aes.decrypt(private_key), AES.block_size)
