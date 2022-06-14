@@ -86,7 +86,7 @@ class Cipher:
         return self.aes.encrypt(plaintext)
 
     def encrypt_text(self, plaintext):
-        self.provider.next_key_pair()
+        # self.provider.next_key_pair()
         try:
             self.encrypt_key()
         except:
@@ -108,7 +108,7 @@ class Cipher:
         return plaintext.decode('utf-8').rstrip(' ')
 
     def encrypt_file(self, source_file, dest_file, gui):
-        self.provider.next_key_pair()
+        # self.provider.next_key_pair()
         try:
             self.encrypt_key()
         except:

@@ -46,6 +46,7 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.cipherText.toPlainText() != "":
             self.statusbar.showMessage("Ciphering...")
             try:
+                self.cipher.provider.next_key_pair()
                 _, _ = self.cipher.provider.get_key_pair()
                 self.tcp.exchange_public_key()
                 c = self.cipher.encrypt_text(self.cipherText.toPlainText())
@@ -65,6 +66,7 @@ class Window(QMainWindow, Ui_MainWindow):
             if chosen_file != "":
                 self.statusbar.showMessage("Ciphering...")
                 try:
+                    self.cipher.provider.next_key_pair()
                     _, _ = self.cipher.provider.get_key_pair()
                     self.tcp.exchange_public_key()
                     result_file_name = chosen_file + ".cipher"

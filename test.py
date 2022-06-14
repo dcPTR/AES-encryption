@@ -1,6 +1,9 @@
 import unittest
 from unittest.mock import Mock
 import filecmp
+
+from Crypto.Random import get_random_bytes
+
 from KeyProvider import KeyProvider
 from cipher import Cipher
 from tcp_handler import TCPHandler
@@ -63,7 +66,7 @@ class TestStringMethods(unittest.TestCase):
 
     def test_generating_keys(self):
         n = 5
-        key_provider = KeyProvider()
+        key_provider = KeyProvider("foobar", get_random_bytes(16))
         key_provider.add_many_key_pairs(n)
         keys_not_empty = True
         for i in range(n):

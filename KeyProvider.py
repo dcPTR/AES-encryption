@@ -4,6 +4,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 
+
 class KeyProvider:
     PRIVATE_KEYS_FILE = "keys/private/private_keys.pem"
     PUBLIC_KEYS_FILE = "keys/public/public_keys.pem"
@@ -35,7 +36,7 @@ class KeyProvider:
         public_key = key.publickey().exportKey('PEM')
         private_key = key.exportKey()
         return private_key, public_key
-    
+
     def encrypt_private_key(self, private_key):
         # encrypt the private key using aes in cbc mode
         # the key is the SHA1 of the self.local_key
