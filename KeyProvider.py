@@ -29,7 +29,7 @@ class KeyProvider:
         with open(KeyProvider.PUBLIC_KEYS_FILE, "ab") as f:
             f.write(public_key + b"\n\n\n")
         print("Keys generated")
-        self.generate_count += 1
+        self.generated_count += 1
 
     def generate_keys(self):
         print("Generating keys...")
