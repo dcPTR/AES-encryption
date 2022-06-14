@@ -51,21 +51,13 @@ class Cipher:
 
     def set_decrypted_key(self, encryped_key):
         # decrypt key using the private key
+        priv, _ = self.provider.get_key_pair()
         print("Set decrypted key...")
-        with open('keys/private/private_key.pem', 'rb') as f:
-            private_key = f.read().strip()
-            print("Importing private key...")
-            private_key = RSA.importKey(self.decrypt_private_key(private_key))
-            self.key = PKCS1_OAEP.new(private_key).decrypt(encryped_key)
-            print(f"Key imported. Length of the key: {len(self.key)}")
-        # priv, _ = self.provider.get_key_pair()
-        # print("Set decrypted key...")
-        # key_decrypted = self.decrypt_private_key(priv)
-        # print(key_decrypted)
-        # print("Importing private key...")
-        # private_key = RSA.importKey(key_decrypted)
-        # self.key = PKCS1_OAEP.new(private_key).decrypt(encryped_key)
-        # print(f"Key imported. Length of the key: {len(self.key)}")
+        key_decrypted = self.decrypt_private_key(priv)
+        print("Importing private key...")
+        private_key = RSA.importKey(key_decrypted)
+        self.key = PKCS1_OAEP.new(private_key).decrypt(encryped_key)
+        print(f"Key imported. Length of the key: {len(self.key)}")
 
     def set_key(self, key):
         self.key = key
