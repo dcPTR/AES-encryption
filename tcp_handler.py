@@ -142,7 +142,7 @@ class TCPHandler():
         if self.Received[0].cmd == MsgType.PUB:
             print(f"Received public key with param {self.Received[0].param} as int {int(self.Received[0].param)}")
             pub_rec = self.Received[0].msg.decode()
-            # store public key in a binary file
+            # store public key in a file
             with open("keys/public/public_key_rec.pem", "w") as f:
                 f.write(pub_rec)
 

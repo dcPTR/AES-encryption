@@ -14,6 +14,7 @@ class KeyProvider:
         self.cur_key = 0
         self.my_local_key = local_key
         self.iv = iv
+        self.generated_count = 0
 
     def add_many_key_pairs(self, n):
         for i in range(n):
@@ -28,6 +29,7 @@ class KeyProvider:
         with open(KeyProvider.PUBLIC_KEYS_FILE, "ab") as f:
             f.write(public_key + b"\n\n\n")
         print("Keys generated")
+        self.generate_count += 1
 
     def generate_keys(self):
         print("Generating keys...")
@@ -52,8 +54,14 @@ class KeyProvider:
         publ_keys = f_publ.read().split(b"\n\n\n")
         priv_key = priv_keys[self.cur_key].strip()
         publ_key = publ_keys[self.cur_key].strip()
+        with open("keys/private/private_key.pem", "wb") as f:
+            f.write(priv_key)
+        with open("keys/public/public_key.pem", "wb") as f:
+            f.write(publ_key)
         print("Returning keys from key provider")
         return priv_key, publ_key
 
     def next_key_pair(self):
         self.cur_key += 1
+        if self.cur_key > self.generated_count:
+            self.cur_key = 0
