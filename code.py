@@ -46,8 +46,6 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.cipherText.toPlainText() != "":
             self.statusbar.showMessage("Ciphering...")
             try:
-                _, _ = self.cipher.provider.get_key_pair()
-                self.tcp.exchange_public_key()
                 c = self.cipher.encrypt_text(self.cipherText.toPlainText())
                 self.statusbar.showMessage("Ciphering done")
                 self.cipherResults.setPlainText(c)
@@ -147,6 +145,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
         try:
             self.tcp = TCPHandler(int(self.serverPort.text()), int(self.clientPort.text()))
+            self.cipher.set_tcp(self.tcp)
         except Exception as e:
             print(e)
             return

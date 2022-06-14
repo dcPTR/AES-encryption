@@ -52,10 +52,6 @@ class KeyProvider:
         publ_keys = f_publ.read().split(b"\n\n\n")
         priv_key = priv_keys[self.cur_key].strip()
         publ_key = publ_keys[self.cur_key].strip()
-        with open("keys/private/private_key.pem", "wb") as f:
-            f.write(priv_key)
-        with open("keys/public/public_key.pem", "wb") as f:
-            f.write(publ_key)
         print("Returning keys from key provider")
         return priv_key, publ_key
 

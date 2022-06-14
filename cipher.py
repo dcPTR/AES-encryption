@@ -28,6 +28,7 @@ class Cipher:
         self.encryped_key = None
         self.public_rec_key = None
         self.provider = None
+        self.tcp = None
         with open("local.key") as f:
             self.my_local_key = f.read()
         self.initialize_key_provider()
@@ -36,6 +37,8 @@ class Cipher:
         self.provider = KeyProvider(self.my_local_key, self.iv)
         self.provider.add_many_key_pairs(2)
 
+    def set_tcp(self, tcp):
+        self.tcp = tcp
 
     def encrypt_key(self):
         # encrypt the key using the public key
@@ -86,6 +89,8 @@ class Cipher:
         return self.aes.encrypt(plaintext)
 
     def encrypt_text(self, plaintext):
+        _, _ = self.provider.get_key_pair()
+        self.tcp.exchange_public_key()
         self.provider.next_key_pair()
         try:
             self.encrypt_key()
@@ -108,6 +113,8 @@ class Cipher:
         return plaintext.decode('utf-8').rstrip(' ')
 
     def encrypt_file(self, source_file, dest_file, gui):
+        _, _ = self.cipher.get_key_pair()
+        self.tcp.exchange_public_key()
         self.provider.next_key_pair()
         try:
             self.encrypt_key()
