@@ -9,6 +9,7 @@ class MsgType(Enum):
     ACK = 2
     NUM = 3
     PUB = 4
+    MKY = 5
 
 
 class Package:
@@ -94,36 +95,6 @@ class TCPHandler():
     def is_connected(self):
         return self.Connected
 
-    def get_message_parts(self, msg):
-        parts = []
-        count = len(msg) / TCPHandler.MAX_BUF
-        if len(msg) % TCPHandler.MAX_BUF != 0:
-            count += 1
-
-        while len(parts) < count:
-            if len(msg) <= TCPHandler.MAX_BUF:
-                parts.append(msg)
-                break
-            else:
-                parts.append(msg[len(parts) * TCPHandler.MAX_BUF:len(parts) * TCPHandler.MAX_BUF + TCPHandler.MAX_BUF])
-
-        return parts
-
-    def send_message(self, messageBytes, fileName="", gui=None):
-        # self.exchange_public_key()
-        msg = bytearray(messageBytes)
-        parts = self.get_message_parts(msg)
-        n = len(parts)
-        numPack = Package(MsgType.NUM, n, bytearray(f"{fileName}".encode()))
-        self.send_package(numPack)
-
-        for i, p in enumerate(parts):
-            sleep(0.01)
-            pack = Package(MsgType.MSG, i, p)
-            self.send_package(pack)
-            if gui is not None:
-                gui.update_progress(i, n - 1)
-
     def send_package(self, package):
         self.Client.send(package.get_request())
         # print(f"sending {package.get_request()}")
@@ -181,6 +152,14 @@ class TCPHandler():
             return True
         return False
 
+    # read public key from file and exchange it with server
+    def exchange_public_key(self, param="0"):
+        print("Exchanging public key")
+        with open("keys/public/public_key.pem", "rb") as f:
+            public_key = f.read()
+        pck = Package(MsgType.PUB, param=param, msg=bytearray(public_key))
+        self.send_package(pck)
+    
     def collectMessagePartsIndexes(self, count):
         current = 0
         indexes = []
@@ -207,11 +186,3 @@ class TCPHandler():
         for i in range(len(indexes) + 1):
             self.Received.pop(0)
         return msg
-
-    # read public key from file and exchange it with server
-    def exchange_public_key(self, param="0"):
-        print("Exchanging public key")
-        with open("keys/public/public_key.pem", "rb") as f:
-            public_key = f.read()
-        pck = Package(MsgType.PUB, param=param, msg=bytearray(public_key))
-        self.send_package(pck)

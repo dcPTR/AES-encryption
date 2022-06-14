@@ -6,6 +6,7 @@ from PyQt5 import uic
 from threading import Thread
 from KeyProvider import KeyProvider
 from cipher import Cipher
+from message_sender import MessageSender
 from tcp_handler import TCPHandler
 from main import Ui_MainWindow
 
@@ -51,7 +52,8 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.statusbar.showMessage("Ciphering done")
                 self.cipherResults.setPlainText(c)
                 if self.tcp is not None and self.tcp.is_connected():
-                    self.tcp.send_message(c.encode())
+                    sender = MessageSender()
+                    sender.send_message(self.tcp, c.encode())
                     self.statusbar.showMessage("Sent encrypted message")
 
             except Exception as e:
@@ -72,7 +74,8 @@ class Window(QMainWindow, Ui_MainWindow):
                         print("Sending file")
                         self.statusbar.showMessage("Sending file")
                         f = open(result_file_name, 'rb')
-                        self.tcp.send_message(f.read(), os.path.basename(result_file_name + ".sent"), self)
+                        sender = MessageSender()
+                        sender.send_message(self.tcp, f.read(), os.path.basename(result_file_name + ".sent"), self)
                         self.statusbar.showMessage("Cipher message sent")
                 except Exception as e:
                     print(f"exception {e}")
