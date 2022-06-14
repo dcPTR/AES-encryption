@@ -41,19 +41,31 @@ class Cipher:
         # encrypt the key using the public key
         try:
             print("Encrypting key...")
-            priv, publ = self.provider.get_key_pair()
-            public_key = RSA.importKey(publ)
-            cipher = PKCS1_OAEP.new(public_key)
-            self.encryped_key = cipher.encrypt(self.key)
-            print(f"Key encrypted. Length of the key: {len(self.encryped_key)}")
+            with open('keys/public/public_key_rec.pem', 'rb') as f:
+                public_key = RSA.importKey(f.read())
+                cipher = PKCS1_OAEP.new(public_key)
+                self.encryped_key = cipher.encrypt(self.key)
+                print(f"Key encrypted. Length of the key: {len(self.encryped_key)}")
         except:
             print("Error: public key of the receiver not found")
 
     def set_decrypted_key(self, encryped_key):
         # decrypt key using the private key
-        priv, publ = self.provider.get_key_pair()
-        private_key = RSA.importKey(self.decrypt_private_key(priv))
-        self.key = PKCS1_OAEP.new(private_key).decrypt(encryped_key)
+        print("Set decrypted key...")
+        with open('keys/private/private_key.pem', 'rb') as f:
+            private_key = f.read().strip()
+            print("Importing private key...")
+            private_key = RSA.importKey(self.decrypt_private_key(private_key))
+            self.key = PKCS1_OAEP.new(private_key).decrypt(encryped_key)
+            print(f"Key imported. Length of the key: {len(self.key)}")
+        # priv, _ = self.provider.get_key_pair()
+        # print("Set decrypted key...")
+        # key_decrypted = self.decrypt_private_key(priv)
+        # print(key_decrypted)
+        # print("Importing private key...")
+        # private_key = RSA.importKey(key_decrypted)
+        # self.key = PKCS1_OAEP.new(private_key).decrypt(encryped_key)
+        # print(f"Key imported. Length of the key: {len(self.key)}")
 
     def set_key(self, key):
         self.key = key
@@ -131,11 +143,13 @@ class Cipher:
         filesize = os.path.getsize(source_file)
         with open(source_file, 'rb') as f:
             with open(dest_file, 'wb') as f2:
+                print("Reading parametres from file...")
                 originalsize = struct.unpack('<Q', f.read(struct.calcsize('Q')))[0]
                 if not gui.connectButton.isEnabled():
                     self.set_decrypted_key(f.read(256))
                 self.set_iv(f.read(16))
                 self.set_mode(f.read(3).decode('utf-8'), gui=gui)
+                print("Decrypting file...")
                 while True:
                     data = f.read(self.chunk_size)
                     if not data:
@@ -147,6 +161,7 @@ class Cipher:
     def decrypt_private_key(self, private_key):
         # decrypt the private key using aes in cbc mode
         # the key is the SHA1 of the self.local_key
+        print("Decrypting private key...")
         key_sha = hashlib.sha1(self.my_local_key.encode('utf-8')).digest()
         key_sha = pad(key_sha, AES.block_size)
         local_aes = AES.new(key_sha, AES.MODE_CBC, self.iv)

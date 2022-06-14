@@ -71,7 +71,7 @@ class TCPHandler():
                 except Exception as e:
                     continue
                 
-                print(f"recv {data[0:Package.CMD_BYTES]} {data[Package.CMD_BYTES:Package.CMD_BYTES + Package.PARAM_BYTES]} {len(data)}")
+                # print(f"recv {data[0:Package.CMD_BYTES]} {data[Package.CMD_BYTES:Package.CMD_BYTES + Package.PARAM_BYTES]} {len(data)}")
                 cmd_b = data[0:Package.CMD_BYTES]
                 cmd = cmd_b.decode()
                 param = data[Package.CMD_BYTES:Package.CMD_BYTES + Package.PARAM_BYTES].decode()
@@ -87,8 +87,8 @@ class TCPHandler():
             return False
 
         self.Connected = not self.Client.connect_ex(("localhost", self.ClientPort))
-        if self.Connected:
-            self.exchange_public_key()
+        # if self.Connected:
+        #     self.exchange_public_key()
         return self.Connected
 
     def is_connected(self):
@@ -110,7 +110,7 @@ class TCPHandler():
         return parts
 
     def send_message(self, messageBytes, fileName="", gui=None):
-        self.exchange_public_key()
+        # self.exchange_public_key()
         msg = bytearray(messageBytes)
         parts = self.get_message_parts(msg)
         n = len(parts)
@@ -126,7 +126,7 @@ class TCPHandler():
 
     def send_package(self, package):
         self.Client.send(package.get_request())
-        print(f"sending {package.get_request()}")
+        # print(f"sending {package.get_request()}")
 
     def disconnect(self):
         if self.is_connected:
@@ -169,10 +169,14 @@ class TCPHandler():
     # handle public key message
     def handlePubKey(self):
         if self.Received[0].cmd == MsgType.PUB:
+            print(f"Received public key with param {self.Received[0].param} as int {int(self.Received[0].param)}")
             pub_rec = self.Received[0].msg.decode()
             # store public key in a binary file
             with open("keys/public/public_key_rec.pem", "w") as f:
                 f.write(pub_rec)
+
+            if int(self.Received[0].param) == 0:
+                self.exchange_public_key("1")
             self.Received.pop(0)
             return True
         return False
@@ -205,9 +209,9 @@ class TCPHandler():
         return msg
 
     # read public key from file and exchange it with server
-    def exchange_public_key(self):
+    def exchange_public_key(self, param="0"):
         print("Exchanging public key")
         with open("keys/public/public_key.pem", "rb") as f:
             public_key = f.read()
-        pck = Package(MsgType.PUB, msg=bytearray(public_key))
+        pck = Package(MsgType.PUB, param=param, msg=bytearray(public_key))
         self.send_package(pck)

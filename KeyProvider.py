@@ -2,7 +2,7 @@ import hashlib
 
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
+from Crypto.Util.Padding import pad
 
 class KeyProvider:
     PRIVATE_KEYS_FILE = "keys/private/private_keys.pem"
@@ -34,7 +34,7 @@ class KeyProvider:
         key = RSA.generate(2048)
         public_key = key.publickey().exportKey('PEM')
         private_key = key.exportKey()
-        return (private_key, public_key)
+        return private_key, public_key
     
     def encrypt_private_key(self, private_key):
         # encrypt the private key using aes in cbc mode
@@ -50,8 +50,14 @@ class KeyProvider:
 
         f_publ = open(KeyProvider.PUBLIC_KEYS_FILE, "rb")
         publ_keys = f_publ.read().split(b"\n\n\n")
-
-        return priv_keys[self.cur_key], publ_keys[self.cur_key]
+        priv_key = priv_keys[self.cur_key].strip()
+        publ_key = publ_keys[self.cur_key].strip()
+        with open("keys/private/private_key.pem", "wb") as f:
+            f.write(priv_key)
+        with open("keys/public/public_key.pem", "wb") as f:
+            f.write(publ_key)
+        print("Returning keys from key provider")
+        return priv_key, publ_key
 
     def next_key_pair(self):
         self.cur_key += 1
