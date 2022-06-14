@@ -62,18 +62,18 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(merged, msg)
 
     def test_generating_keys(self):
-        n = 5
-        key_provider = KeyProvider()
-        key_provider.add_many_key_pairs(n)
-        keys_not_empty = True
-        for i in range(n):
-            priv, publ = key_provider.get_key_pair()
-            key_provider.next_key_pair()
-            if len(priv) == 0 or len(publ) == 0:
-                keys_not_empty = False
-                break
+            n = 5
+            key_provider = KeyProvider("foobar", get_random_bytes(16))
+            key_provider.add_many_key_pairs(n)
+            keys_not_empty = True
+            for i in range(n):
+                priv, publ = key_provider.get_key_pair()
+                key_provider.next_key_pair()
+                if len(priv) == 0 or len(publ) == 0:
+                    keys_not_empty = False
+                    break
 
-        self.assertTrue(keys_not_empty and key_provider.cur_key == n)
+            self.assertTrue(keys_not_empty and key_provider.cur_key == n)
 
 
 if __name__ == '__main__':
