@@ -25,7 +25,7 @@ Bezpieczeństwo Systemów Komputerowych
     + Parameter - 64 bytes
     + Data - 64512 bytes
 
-    The total message length is less than the limit imposed by the TCP protocol (216 = 65536 bytes)
+    The total message length is less than the limit imposed by the TCP protocol (2<sup>16</sup> = 65536 bytes)
 
 3. Sending messages
 	Messages are divided into segments (command, parameter, data) of pre-selected lengths. In addition, messages exceeding the maximum size are broken into smaller fragments and numbered.
