@@ -1,4 +1,5 @@
 import hashlib
+import os
 
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
@@ -10,6 +11,12 @@ class KeyProvider:
     PUBLIC_KEYS_FILE = "keys/public/public_keys.pem"
 
     def __init__(self, local_key, iv):
+        if not os.path.exists("keys"):
+            os.mkdir("keys")
+        if not os.path.exists("keys/private"):
+            os.mkdir("keys/private")
+        if not os.path.exists("keys/public"):
+            os.mkdir("keys/public")
         open(KeyProvider.PRIVATE_KEYS_FILE, 'w').close()
         open(KeyProvider.PUBLIC_KEYS_FILE, 'w').close()
         self.cur_key = 0
